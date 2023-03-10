@@ -1,30 +1,12 @@
-use cgmath::{vec2, MetricSpace, Vector2};
+use cgmath::vec2;
 use chumsky::{prelude::*, text::newline};
-use itertools::Itertools;
-use std::{
-    collections::HashMap,
-    fmt::{Display, Write},
-    io::{stdin, Read},
-    iter,
-};
+use particles::{Particle, ParticlesData};
+use std::io::{stdin, Read};
 
-type ID = usize;
-
-#[derive(Debug)]
-struct Particle {
-    id: ID,
-    position: Vector2<f64>,
-    radius: f64,
-}
-
-#[derive(Debug)]
-struct ParticlesData {
-    n: usize,
-    l: f64,
-    m: usize,
-    r_c: f64,
-    particles: Vec<Particle>,
-}
+use crate::{neighbor_finder::NeighborFinder, simple_finder::SimpleNeighborFinder};
+mod neighbor_finder;
+mod particles;
+mod simple_finder;
 
 fn parser<'a>() -> impl Parser<'a, &'a str, ParticlesData, extra::Err<Rich<'a, char>>> {
     let digits = text::digits(10);
@@ -61,55 +43,15 @@ fn parser<'a>() -> impl Parser<'a, &'a str, ParticlesData, extra::Err<Rich<'a, c
         .map(|(((n, l), m), r_c)| (n, l, m, r_c))
         .then_ignore(newline())
         .then(particles)
-        .map(|((n, l, m, r_c), particles)| ParticlesData {
-            n,
-            l,
-            m,
-            r_c,
-            particles,
-        })
+        .map(
+            |((_, space_side, grid_size, interaction_radius), particles)| ParticlesData {
+                space_side,
+                grid_size,
+                interaction_radius,
+                particles,
+            },
+        )
         .then_ignore(end())
-}
-
-#[derive(Debug, Default)]
-struct NeighborMap {
-    map: HashMap<ID, Vec<ID>>,
-}
-
-impl NeighborMap {
-    fn add_pair(&mut self, p1: ID, p2: ID) {
-        self.map.entry(p1).or_default().push(p2);
-        self.map.entry(p2).or_default().push(p1);
-    }
-}
-
-impl Display for NeighborMap {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for (particle, neighbors) in &self.map {
-            f.write_str(
-                &iter::once(particle)
-                    .chain(neighbors)
-                    .map(|n| n.to_string())
-                    .collect::<Vec<String>>()
-                    .join(" "),
-            )?;
-            f.write_char('\n')?;
-        }
-        Ok(())
-    }
-}
-
-impl ParticlesData {
-    fn generate_neighbor_map(&self) -> NeighborMap {
-        let mut map = NeighborMap::default();
-        for (p1, p2) in self.particles.iter().tuple_combinations() {
-            if p1.position.distance(p2.position) - p1.radius - p2.radius <= self.r_c {
-                map.add_pair(p1.id, p2.id);
-            }
-        }
-
-        map
-    }
 }
 
 fn main() {
@@ -122,7 +64,7 @@ fn main() {
 
     //dbg!(&input);
 
-    let output = input.generate_neighbor_map();
+    let output = SimpleNeighborFinder::find_neighbors(&input);
 
     print!("{output}");
 }
