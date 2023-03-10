@@ -3,7 +3,11 @@ use chumsky::{prelude::*, text::newline};
 use particles::{Particle, ParticlesData};
 use std::io::{stdin, Read};
 
-use crate::{neighbor_finder::NeighborFinder, simple_finder::SimpleNeighborFinder};
+use crate::{
+    cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder,
+    simple_finder::SimpleNeighborFinder,
+};
+mod cim_finder;
 mod neighbor_finder;
 mod particles;
 mod simple_finder;
@@ -44,8 +48,8 @@ fn parser<'a>() -> impl Parser<'a, &'a str, ParticlesData, extra::Err<Rich<'a, c
         .then_ignore(newline())
         .then(particles)
         .map(
-            |((_, space_side, grid_size, interaction_radius), particles)| ParticlesData {
-                space_side,
+            |((_, space_length, grid_size, interaction_radius), particles)| ParticlesData {
+                space_length,
                 grid_size,
                 interaction_radius,
                 particles,
@@ -64,7 +68,8 @@ fn main() {
 
     //dbg!(&input);
 
-    let output = SimpleNeighborFinder::find_neighbors(&input);
+    //let output = SimpleNeighborFinder::find_neighbors(&input);
+    let output = CimNeighborFinder::find_neighbors(&input);
 
     print!("{output}");
 }
