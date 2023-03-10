@@ -1,4 +1,4 @@
-use cgmath::Vector3;
+use cgmath::Vector2;
 use std::{
     collections::HashMap,
     error::Error,
@@ -12,7 +12,7 @@ type ID = usize;
 
 struct Particle {
     id: ID,
-    position: Vector3<f64>,
+    position: Vector2<f64>,
     radius: f64,
 }
 
