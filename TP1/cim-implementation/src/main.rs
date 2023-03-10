@@ -1,5 +1,6 @@
-use cgmath::{vec2, Vector2};
+use cgmath::{vec2, MetricSpace, Vector2};
 use chumsky::{prelude::*, text::newline};
+use itertools::Itertools;
 use std::{
     collections::HashMap,
     fmt::{Display, Write},
@@ -70,8 +71,16 @@ fn parser<'a>() -> impl Parser<'a, &'a str, ParticlesData, extra::Err<Rich<'a, c
         .then_ignore(end())
 }
 
+#[derive(Debug, Default)]
 struct NeighborMap {
     map: HashMap<ID, Vec<ID>>,
+}
+
+impl NeighborMap {
+    fn add_pair(&mut self, p1: ID, p2: ID) {
+        self.map.entry(p1).or_default().push(p2);
+        self.map.entry(p2).or_default().push(p1);
+    }
 }
 
 impl Display for NeighborMap {
@@ -92,7 +101,14 @@ impl Display for NeighborMap {
 
 impl ParticlesData {
     fn generate_neighbor_map(&self) -> NeighborMap {
-        todo!("Implement neighbor search");
+        let mut map = NeighborMap::default();
+        for (p1, p2) in self.particles.iter().tuple_combinations() {
+            if p1.position.distance(p2.position) - p1.radius - p2.radius <= self.r_c {
+                map.add_pair(p1.id, p2.id);
+            }
+        }
+
+        map
     }
 }
 
@@ -104,7 +120,7 @@ fn main() {
         .into_result()
         .expect("Error parsing input data.");
 
-    dbg!(&input);
+    //dbg!(&input);
 
     let output = input.generate_neighbor_map();
 
