@@ -1,0 +1,20 @@
+version: "3.9"
+
+services:
+  jupyterlab:
+    environment: 
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=ss
+    ports:
+      - 8899:8899
+    user: root
+    volumes:
+      - .:/project
+    working_dir: /project
+    restart: "no"
+    build:
+      context: .
+    entrypoint: >
+      bash -c "
+      poetry run jupyter lab --ip=0.0.0.0 --port=8899 --allow-root --no-browser
+      "
