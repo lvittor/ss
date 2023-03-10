@@ -1,4 +1,4 @@
-use cgmath::{MetricSpace, Vector2};
+use cgmath::{num_traits::Float, InnerSpace, Vector2};
 
 pub type ID = usize;
 
@@ -18,7 +18,22 @@ pub struct ParticlesData {
 }
 
 impl Particle {
-    pub fn is_within_distance_of(&self, other: &Self, radius: f64) -> bool {
-        self.position.distance2(other.position) <= (radius + self.radius + other.radius).powi(2)
+    pub fn is_within_distance_of(
+        &self,
+        other: &Self,
+        radius: f64,
+        space_length: f64,
+        cyclic: bool,
+    ) -> bool {
+        let mut delta = (self.position - other.position).map(Float::abs);
+        if cyclic {
+            if delta.x > 0.5 * space_length {
+                delta.x = 1.0 - delta.x;
+            }
+            if delta.y > 0.5 * space_length {
+                delta.y = 1.0 - delta.y;
+            }
+        }
+        delta.magnitude2() <= (radius + self.radius + other.radius).powi(2)
     }
 }

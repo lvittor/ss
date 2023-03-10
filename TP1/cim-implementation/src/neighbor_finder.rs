@@ -6,7 +6,7 @@ use std::{
 };
 
 pub trait NeighborFinder<Particles, ID> {
-    fn find_neighbors(particles: &Particles) -> NeighborMap<ID>;
+    fn find_neighbors(particles: &Particles, cyclic: bool) -> NeighborMap<ID>;
 }
 
 #[derive(Debug, Default)]

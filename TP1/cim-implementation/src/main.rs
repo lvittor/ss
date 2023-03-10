@@ -68,8 +68,8 @@ fn main() {
 
     //dbg!(&input);
 
-    //let output = SimpleNeighborFinder::find_neighbors(&input);
-    let output = CimNeighborFinder::find_neighbors(&input);
+    //let output = SimpleNeighborFinder::find_neighbors(&input, false);
+    let output = CimNeighborFinder::find_neighbors(&input, false);
 
     print!("{output}");
 }
