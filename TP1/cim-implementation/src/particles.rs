@@ -28,10 +28,10 @@ impl Particle {
         let mut delta = (self.position - other.position).map(Float::abs);
         if cyclic {
             if delta.x > 0.5 * space_length {
-                delta.x = 1.0 - delta.x;
+                delta.x = space_length - delta.x;
             }
             if delta.y > 0.5 * space_length {
-                delta.y = 1.0 - delta.y;
+                delta.y = space_length - delta.y;
             }
         }
         delta.magnitude2() <= (radius + self.radius + other.radius).powi(2)

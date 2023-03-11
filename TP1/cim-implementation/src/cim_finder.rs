@@ -23,19 +23,22 @@ impl NeighborFinder<ParticlesData, ID> for CimNeighborFinder {
             [vec2(0, 0), vec2(1, 0), vec2(1, 1), vec2(0, 1), vec2(-1, 1)]
                 .into_iter()
                 .filter_map(move |v| {
-                    let v = v + cell_index.cast().unwrap();
+                    let new_index = v + cell_index.cast().unwrap();
                     if cyclic {
-                        Some(v.map(|v| v.rem_euclid(&(particles.grid_size as i32)) as usize))
+                        Some(
+                            new_index.map(|v| v.rem_euclid(&(particles.grid_size as i32)) as usize),
+                        )
                     } else {
-                        (v.x >= 0
-                            && v.y >= 0
-                            && (v.x as usize) < particles.grid_size
-                            && (v.y as usize) < particles.grid_size)
-                            .then(|| v.cast().unwrap())
+                        (new_index.x >= 0
+                            && new_index.y >= 0
+                            && (new_index.x as usize) < particles.grid_size
+                            && (new_index.y as usize) < particles.grid_size)
+                            .then(|| new_index.cast().unwrap())
                     }
                 })
         };
 
+        // Fill the cell matrix with particles.
         for particle in &particles.particles {
             let cell_index = get_cell_index(particle);
             cells[(cell_index.y, cell_index.x)].push(*particle);
@@ -45,17 +48,18 @@ impl NeighborFinder<ParticlesData, ID> for CimNeighborFinder {
 
         for particle in &particles.particles {
             let cell_index = get_cell_index(particle);
-            for cell in get_cells_to_check(cell_index) {
-                for other in &cells[(cell.y, cell.x)] {
-                    if other.id > particle.id {
-                        if particle.is_within_distance_of(
+            for other_cell in get_cells_to_check(cell_index) {
+                for other in &cells[(other_cell.y, other_cell.x)] {
+                    // If we are in the same cell, we only check the same pair once.
+                    if (other_cell != cell_index || other.id > particle.id)
+                        && particle.is_within_distance_of(
                             other,
                             particles.interaction_radius,
                             particles.space_length,
                             cyclic,
-                        ) {
-                            map.add_pair(particle.id, other.id);
-                        }
+                        )
+                    {
+                        map.add_pair(particle.id, other.id);
                     }
                 }
             }
