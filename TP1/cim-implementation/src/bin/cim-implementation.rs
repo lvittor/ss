@@ -47,6 +47,6 @@ fn main() {
     if let Some(output_file) = args.output {
         fs::write(output_file, format!("{output}")).unwrap();
     }
-    let delta = end - start;
-    eprintln!("{delta:?}");
+    let delta = (end - start).as_secs_f64();
+    eprintln!("{delta}");
 }
