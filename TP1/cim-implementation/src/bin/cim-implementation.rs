@@ -1,4 +1,4 @@
-use std::io::{stdin, Read};
+use std::{io::{stdin, Read}, time::Instant};
 
 use chumsky::Parser;
 use cim_implementation::{
@@ -16,8 +16,12 @@ fn main() {
 
     //dbg!(&input);
 
+    let start = Instant::now();
     //let output = SimpleNeighborFinder::find_neighbors(&input, false);
     let output = CimNeighborFinder::find_neighbors(&input, true);
+    let end = Instant::now();
 
     print!("{output}");
+    let delta = end - start;
+    eprintln!("{delta:?}");
 }
