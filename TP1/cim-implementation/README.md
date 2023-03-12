@@ -5,7 +5,7 @@
 # Run
 
 ## Implementation
-`./target/debug/cim-implementation < ../data/input.txt > ../data/output.txt`
+`./target/debug/cim-implementation -i ../data/input.txt -o ../data/output.txt --brute-force --cyclic`
 
 ## Visualization
 `./target/debug/visualization --input ../data/input.txt --output ../data/output.txt`
