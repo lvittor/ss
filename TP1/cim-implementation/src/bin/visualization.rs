@@ -11,15 +11,12 @@ use clap::Parser as _parser;
 use nannou::{color::IntoLinSrgba, draw::properties::ColorScalar, glam::Vec3Swizzles, prelude::*};
 use std::fs::read_to_string;
 
-/// Simple program to greet a person
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Name of the person to greet
     #[arg(short, long)]
     input: String,
 
-    /// Number of times to greet
     #[arg(short, long)]
     output: String,
 }
