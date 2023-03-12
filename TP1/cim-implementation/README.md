@@ -1,7 +1,11 @@
-## Build and run:
+# Build
 
-`cargo run < ../data/example_input.txt`
+`docker run --rm -it --user "$(id -u)":"$(id -g)" -e CARGO_HOME=/usr/src/myapp/cargo_home -v "$PWD":/usr/src/myapp -w /usr/src/myapp rustlang/rust:nightly-slim cargo build --all-targets`
 
-## Build and run in docker with:
+# Run
 
-`docker run --rm -i --user "$(id -u)":"$(id -g)" -e CARGO_HOME=/usr/src/myapp/cargo_home -v "$PWD":/usr/src/myapp -w /usr/src/myapp rustlang/rust:nightly-slim cargo run < ../data/example_input.txt`
+## Implementation
+`./target/debug/cim-implementation < ../data/input.txt > ../data/output.txt`
+
+## Visualization
+`./target/debug/visualization --input ../data/input.txt --output ../data/output.txt`

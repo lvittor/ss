@@ -8,6 +8,7 @@ default-run = "cim-implementation"
 anyhow = "1.0.69"
 cgmath = "0.18.0"
 chumsky = "1.0.0-alpha.2"
+clap = { version = "4.1.8", features = ["derive"] }
 itertools = "0.10.5"
 nannou = "0.18.1"
 ndarray = "0.15.6"

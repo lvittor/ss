@@ -7,8 +7,22 @@ use cim_implementation::{
     parser::{input_parser, output_parser},
     particles::{ParticlesData, ID},
 };
+use clap::Parser as _parser;
 use nannou::{color::IntoLinSrgba, draw::properties::ColorScalar, glam::Vec3Swizzles, prelude::*};
 use std::fs::read_to_string;
+
+/// Simple program to greet a person
+#[derive(clap::Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Name of the person to greet
+    #[arg(short, long)]
+    input: String,
+
+    /// Number of times to greet
+    #[arg(short, long)]
+    output: String,
+}
 
 fn main() {
     nannou::app(model).update(update).run();
@@ -23,8 +37,9 @@ struct Model {
 }
 
 fn model(app: &App) -> Model {
-    let input = read_to_string("../data/example_input.txt").unwrap();
-    let output = read_to_string("../data/output.txt").unwrap();
+    let args = Args::parse();
+    let input = read_to_string(args.input).unwrap();
+    let output = read_to_string(args.output).unwrap();
     let particles: ParticlesData = input_parser()
         .parse(&input)
         .into_result()
