@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     fmt::{Display, Write},
     hash::Hash,
     iter,
@@ -11,13 +11,21 @@ pub trait NeighborFinder<Particles, ID> {
 
 #[derive(Debug, Default)]
 pub struct NeighborMap<ID> {
-    map: HashMap<ID, Vec<ID>>,
+    map: HashMap<ID, HashSet<ID>>,
 }
 
 impl<ID: Hash + Eq + Copy> NeighborMap<ID> {
+    pub fn new(map: HashMap<ID, HashSet<ID>>) -> Self {
+        Self { map }
+    }
+
     pub fn add_pair(&mut self, p1: ID, p2: ID) {
-        self.map.entry(p1).or_default().push(p2);
-        self.map.entry(p2).or_default().push(p1);
+        self.map.entry(p1).or_default().insert(p2);
+        self.map.entry(p2).or_default().insert(p1);
+    }
+
+    pub fn has_pair(&self, p1: ID, p2: ID) -> bool {
+        self.map.get(&p1).is_some_and(|s| s.contains(&p2))
     }
 }
 

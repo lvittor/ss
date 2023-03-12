@@ -1,18 +1,14 @@
+use std::collections::{HashMap, HashSet};
+
 use cgmath::vec2;
 use chumsky::{prelude::*, text::newline};
-use particles::{Particle, ParticlesData};
-use std::io::{stdin, Read};
 
 use crate::{
-    cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder,
-    simple_finder::SimpleNeighborFinder,
+    neighbor_finder::NeighborMap,
+    particles::{Particle, ParticlesData, ID},
 };
-mod cim_finder;
-mod neighbor_finder;
-mod particles;
-mod simple_finder;
 
-fn parser<'a>() -> impl Parser<'a, &'a str, ParticlesData, extra::Err<Rich<'a, char>>> {
+pub fn input_parser<'a>() -> impl Parser<'a, &'a str, ParticlesData, extra::Err<Rich<'a, char>>> {
     let digits = text::digits(10);
     let unsigned = digits.map_slice(|s: &str| s.parse::<usize>().unwrap());
 
@@ -58,18 +54,18 @@ fn parser<'a>() -> impl Parser<'a, &'a str, ParticlesData, extra::Err<Rich<'a, c
         .then_ignore(end())
 }
 
-fn main() {
-    let mut input = String::new();
-    stdin().read_to_string(&mut input).unwrap();
-    let input: ParticlesData = parser()
-        .parse(&input)
-        .into_result()
-        .expect("Error parsing input data.");
+pub fn output_parser<'a>() -> impl Parser<'a, &'a str, NeighborMap<ID>, extra::Err<Rich<'a, char>>>
+{
+    let digits = text::digits(10);
+    let unsigned = digits.map_slice(|s: &str| s.parse::<usize>().unwrap());
 
-    //dbg!(&input);
+    let line = unsigned
+        .then_ignore(just(' '))
+        .then(unsigned.separated_by(just(' ')).at_least(0).collect::<HashSet<_>>());
 
-    //let output = SimpleNeighborFinder::find_neighbors(&input, false);
-    let output = CimNeighborFinder::find_neighbors(&input, false);
-
-    print!("{output}");
+    line.separated_by(newline())
+        .allow_trailing()
+        .collect::<Vec<_>>()
+        .map(|lines| NeighborMap::new(HashMap::from_iter(lines)))
+        .then_ignore(end())
 }
