@@ -7,7 +7,7 @@ use cim_implementation::{
     parser::{input_parser, output_parser},
     particles::{ParticlesData, ID},
 };
-use nannou::{glam::Vec3Swizzles, prelude::*};
+use nannou::{color::IntoLinSrgba, draw::properties::ColorScalar, glam::Vec3Swizzles, prelude::*};
 use std::fs::read_to_string;
 
 fn main() {
@@ -54,7 +54,6 @@ fn event(app: &App, model: &mut Model, event: WindowEvent) {
             .inverse()
             .transform_point3(vec3(x, y, 0.0))
             .xy();
-        println!("{pos}");
         for particle in &model.particles.particles {
             if particle
                 .position
@@ -81,6 +80,19 @@ fn update(_app: &App, _model: &mut Model, _update: Update) {}
 fn view(app: &App, model: &Model, frame: Frame) {
     let draw = app.draw().transform(model.space_to_window);
     draw.background().color(BLACK);
+    draw_grid(
+        &draw,
+        &Rect::from_corners(
+            Point2::ZERO,
+            pt2(
+                model.particles.space_length as f32,
+                model.particles.space_length as f32,
+            ),
+        ),
+        model.particles.space_length as f32 / model.particles.grid_size as f32,
+        0.1,
+        GRAY,
+    );
     for particle in &model.particles.particles {
         let selected = model.selected_particle.is_some_and(|id| particle.id == id);
         let in_range = model
@@ -100,14 +112,48 @@ fn view(app: &App, model: &Model, frame: Frame) {
             .stroke(WHITE)
             .stroke_weight(0.25);
         if selected {
-            draw.ellipse()
-                .x(particle.position.x as f32)
-                .y(particle.position.y as f32)
-                .no_fill()
-                .radius((model.particles.interaction_radius + particle.radius) as f32)
-                .stroke_weight(0.25)
-                .stroke(RED);
+            for x in [-1, 0, 1] {
+                for y in [-1, 0, 1] {
+                    draw.ellipse()
+                        .x(particle.position.x as f32
+                            + x as f32 * model.particles.space_length as f32)
+                        .y(particle.position.y as f32
+                            + y as f32 * model.particles.space_length as f32)
+                        .no_fill()
+                        .radius((model.particles.interaction_radius + particle.radius) as f32)
+                        .stroke_weight(0.25)
+                        .stroke(RED);
+                }
+            }
         }
     }
     draw.to_frame(app, &frame).unwrap();
+}
+
+fn draw_grid<C: IntoLinSrgba<ColorScalar> + Copy>(
+    draw: &Draw,
+    win: &Rect,
+    step: f32,
+    weight: f32,
+    color: C,
+) {
+    let step_by = || (0..).map(|i| i as f32 * step);
+    let r_iter = step_by().take_while(|&f| f < win.right());
+    let l_iter = step_by().map(|f| -f).take_while(|&f| f > win.left());
+    let x_iter = r_iter.chain(l_iter);
+    for x in x_iter {
+        draw.line()
+            .weight(weight)
+            .points(pt2(x, win.bottom()), pt2(x, win.top()))
+            .color(color);
+    }
+    let t_iter = step_by().take_while(|&f| f < win.top());
+    let b_iter = step_by().map(|f| -f).take_while(|&f| f > win.bottom());
+    let y_iter = t_iter.chain(b_iter);
+    for y in y_iter {
+        draw.line()
+            .weight(weight)
+            .points(pt2(win.left(), y), pt2(win.right(), y))
+            .color(color);
+    }
 }
