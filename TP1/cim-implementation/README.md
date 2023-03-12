@@ -1,11 +1,35 @@
+# Usage
+
+Show targets
+
+```bash
+make
+```
+
 # Build
 
-`docker run --rm -it --user "$(id -u)":"$(id -g)" -e CARGO_HOME=/usr/src/myapp/cargo_home -v "$PWD":/usr/src/myapp -w /usr/src/myapp rustlang/rust:nightly-slim cargo build --all-targets`
+```bash
+make build
+```
 
 # Run
 
 ## Implementation
-`./target/debug/cim-implementation -i ../data/input.txt -o ../data/output.txt --brute-force --cyclic`
+
+Run CIM method by default
+
+```
+make run-impl
+```
+
+Run with bruteforce
+
+```
+make run-impl ARGS="-o /dev/stdout -b"
+```
 
 ## Visualization
-`./target/debug/visualization --input ../data/input.txt --output ../data/output.txt`
+
+```
+make run-viz
+```
