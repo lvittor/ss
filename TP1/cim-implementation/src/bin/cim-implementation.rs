@@ -1,6 +1,5 @@
 use std::{
     fs,
-    io::{stdin, Read},
     time::Instant,
 };
 
