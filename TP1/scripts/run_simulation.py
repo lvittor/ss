@@ -3,12 +3,6 @@ from generate import generate
 from typing import Optional
 import subprocess
 
-def write_file(n: int, l: float, m: int, rc: float, seed: Optional[int] = None) -> None:
-    file_string = generate(n, l, m, rc, seed)
-    with open("/tmp/temp.txt", "w") as f:
-        f.write(file_string)
-
-
 # Decorator for running the function run_cim multiple times and get the average
 def run_multiple_times(times: int):
     def decorator(func):
