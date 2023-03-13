@@ -1,0 +1,175 @@
+=====================================
+N=100, M=1
+cyclic=True, brute_force=True, average_time=0.0007795508
+cyclic=True, brute_force=False, average_time=0.0028553995000000004
+cyclic=False, brute_force=True, average_time=0.0007222241999999999
+cyclic=False, brute_force=False, average_time=0.0005981499
+=====================================
+=====================================
+N=100, M=2
+cyclic=True, brute_force=True, average_time=0.0006644945
+cyclic=True, brute_force=False, average_time=0.00103925
+cyclic=False, brute_force=True, average_time=0.0008498498999999999
+cyclic=False, brute_force=False, average_time=0.0007700122
+=====================================
+=====================================
+N=100, M=4
+cyclic=True, brute_force=True, average_time=0.0008401440000000001
+cyclic=True, brute_force=False, average_time=0.000708329
+cyclic=False, brute_force=True, average_time=0.0006695924
+cyclic=False, brute_force=False, average_time=0.0008985047999999999
+=====================================
+=====================================
+N=100, M=8
+cyclic=True, brute_force=True, average_time=0.0006645585
+cyclic=True, brute_force=False, average_time=0.0004716752
+cyclic=False, brute_force=True, average_time=0.000568992
+cyclic=False, brute_force=False, average_time=0.00040152490000000004
+=====================================
+=====================================
+N=100, M=16
+cyclic=True, brute_force=True, average_time=0.0006580799
+cyclic=True, brute_force=False, average_time=0.000366293
+cyclic=False, brute_force=True, average_time=0.0006233571
+cyclic=False, brute_force=False, average_time=0.0003458712
+=====================================
+=====================================
+N=200, M=1
+cyclic=True, brute_force=True, average_time=0.0026265155
+cyclic=True, brute_force=False, average_time=0.011318047000000001
+cyclic=False, brute_force=True, average_time=0.0024970562
+cyclic=False, brute_force=False, average_time=0.0025495335000000003
+=====================================
+=====================================
+N=200, M=2
+cyclic=True, brute_force=True, average_time=0.0029193077
+cyclic=True, brute_force=False, average_time=0.003947377
+cyclic=False, brute_force=True, average_time=0.0022702099
+cyclic=False, brute_force=False, average_time=0.0024886035
+=====================================
+=====================================
+N=200, M=4
+cyclic=True, brute_force=True, average_time=0.0031225152000000003
+cyclic=True, brute_force=False, average_time=0.0016379342000000002
+cyclic=False, brute_force=True, average_time=0.0023775623000000003
+cyclic=False, brute_force=False, average_time=0.0015050768
+=====================================
+=====================================
+N=200, M=8
+cyclic=True, brute_force=True, average_time=0.0025636746000000004
+cyclic=True, brute_force=False, average_time=0.0016718431
+cyclic=False, brute_force=True, average_time=0.0028663302
+cyclic=False, brute_force=False, average_time=0.0015143952
+=====================================
+=====================================
+N=200, M=16
+cyclic=True, brute_force=True, average_time=0.0023269407
+cyclic=True, brute_force=False, average_time=0.0009351581000000001
+cyclic=False, brute_force=True, average_time=0.0028530876000000004
+cyclic=False, brute_force=False, average_time=0.0010923320000000001
+=====================================
+=====================================
+N=400, M=1
+cyclic=True, brute_force=True, average_time=0.0097686584
+cyclic=True, brute_force=False, average_time=0.05257137629999999
+cyclic=False, brute_force=True, average_time=0.009477928200000001
+cyclic=False, brute_force=False, average_time=0.0090628119
+=====================================
+=====================================
+N=400, M=2
+cyclic=True, brute_force=True, average_time=0.0100610514
+cyclic=True, brute_force=False, average_time=0.0181386032
+cyclic=False, brute_force=True, average_time=0.009972752000000001
+cyclic=False, brute_force=False, average_time=0.008435638799999999
+=====================================
+=====================================
+N=400, M=4
+cyclic=True, brute_force=True, average_time=0.0107564804
+cyclic=True, brute_force=False, average_time=0.006460270299999999
+cyclic=False, brute_force=True, average_time=0.009572628400000002
+cyclic=False, brute_force=False, average_time=0.0049177245
+=====================================
+=====================================
+N=400, M=8
+cyclic=True, brute_force=True, average_time=0.0099742314
+cyclic=True, brute_force=False, average_time=0.004117409
+cyclic=False, brute_force=True, average_time=0.0091257733
+cyclic=False, brute_force=False, average_time=0.0037713891
+=====================================
+=====================================
+N=400, M=16
+cyclic=True, brute_force=True, average_time=0.0144917341
+cyclic=True, brute_force=False, average_time=0.0029929411000000003
+cyclic=False, brute_force=True, average_time=0.009477732999999999
+cyclic=False, brute_force=False, average_time=0.0041108381
+=====================================
+=====================================
+N=800, M=1
+cyclic=True, brute_force=True, average_time=0.041719072100000004
+cyclic=True, brute_force=False, average_time=0.20524153110000004
+cyclic=False, brute_force=True, average_time=0.04073778460000001
+cyclic=False, brute_force=False, average_time=0.0371768725
+=====================================
+=====================================
+N=800, M=2
+cyclic=True, brute_force=True, average_time=0.039943572100000005
+cyclic=True, brute_force=False, average_time=0.06395423489999999
+cyclic=False, brute_force=True, average_time=0.040649101900000005
+cyclic=False, brute_force=False, average_time=0.035335261300000004
+=====================================
+=====================================
+N=800, M=4
+cyclic=True, brute_force=True, average_time=0.0439758955
+cyclic=True, brute_force=False, average_time=0.03294057759999999
+cyclic=False, brute_force=True, average_time=0.0411199144
+cyclic=False, brute_force=False, average_time=0.023510324399999998
+=====================================
+=====================================
+N=800, M=8
+cyclic=True, brute_force=True, average_time=0.0436520758
+cyclic=True, brute_force=False, average_time=0.013811080600000001
+cyclic=False, brute_force=True, average_time=0.036459637100000004
+cyclic=False, brute_force=False, average_time=0.012789423800000001
+=====================================
+=====================================
+N=800, M=16
+cyclic=True, brute_force=True, average_time=0.0398999035
+cyclic=True, brute_force=False, average_time=0.0136022374
+cyclic=False, brute_force=True, average_time=0.03940102920000001
+cyclic=False, brute_force=False, average_time=0.0108139249
+=====================================
+=====================================
+N=1600, M=1
+cyclic=True, brute_force=True, average_time=0.163533614
+cyclic=True, brute_force=False, average_time=0.7161693951999999
+cyclic=False, brute_force=True, average_time=0.14969426330000002
+cyclic=False, brute_force=False, average_time=0.1507344894
+=====================================
+=====================================
+N=1600, M=2
+cyclic=True, brute_force=True, average_time=0.1612417575
+cyclic=True, brute_force=False, average_time=0.2602747862
+cyclic=False, brute_force=True, average_time=0.16523445399999998
+cyclic=False, brute_force=False, average_time=0.14857472640000002
+=====================================
+=====================================
+N=1600, M=4
+cyclic=True, brute_force=True, average_time=0.1917457379
+cyclic=True, brute_force=False, average_time=0.11003657950000001
+cyclic=False, brute_force=True, average_time=0.1574117238
+cyclic=False, brute_force=False, average_time=0.0842014541
+=====================================
+=====================================
+N=1600, M=8
+cyclic=True, brute_force=True, average_time=0.17273136609999998
+cyclic=True, brute_force=False, average_time=0.06202970459999999
+cyclic=False, brute_force=True, average_time=0.15511184830000002
+cyclic=False, brute_force=False, average_time=0.0565047199
+=====================================
+=====================================
+N=1600, M=16
+cyclic=True, brute_force=True, average_time=0.1748759292
+cyclic=True, brute_force=False, average_time=0.0514258715
+cyclic=False, brute_force=True, average_time=0.1651561312
+cyclic=False, brute_force=False, average_time=0.04805975
+=====================================
