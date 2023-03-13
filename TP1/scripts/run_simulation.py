@@ -10,11 +10,10 @@ import pandas as pd
 def run_multiple_times(times: int):
     def decorator(func):
         def wrapper(*args, **kwargs):
-            total = 0
+            runs = []
             for _ in range(times):
-                total += func(*args, **kwargs)
-            average_time = total / times
-            return average_time
+                runs.append(func(*args, **kwargs))
+            return runs
         return wrapper
     return decorator
 
@@ -53,12 +52,13 @@ def q2():
             print("=====================================")
             print(f"N={N}, M={M}")
             for cyclic, brute_force in [(True, True), (True, False), (False, True), (False, False)]:
-                run_time = run_cim(input_data, cyclic=cyclic,
-                                   brute_force=brute_force)
-                df = pd.concat(
-                    [df, pd.DataFrame([{'N': N, 'M': M, 'cyclic': cyclic, 'brute_force': brute_force, 'time': run_time}], columns=df.columns)])
+                run_times = run_cim(input_data, cyclic=cyclic,
+                                    brute_force=brute_force)
+                for run_time in run_times:
+                    df = pd.concat(
+                        [df, pd.DataFrame([{'N': N, 'M': M, 'cyclic': cyclic, 'brute_force': brute_force, 'time': run_time}], columns=df.columns)])
                 print(
-                    f"cyclic={cyclic}, brute_force={brute_force}, average_time={run_time}")
+                    f"cyclic={cyclic}, brute_force={brute_force}, times={run_times}")
             print("=====================================")
 
     df.to_pickle("data/simulation_runs.pkl")
