@@ -7,7 +7,14 @@ DOCKER_IMG := rustlang/rust:nightly-slim
 
 INPUT_FILE_PATH := ../data/input.txt
 OUTPUT_FILE_PATH := ../data/output.txt
-TARGET_DIR := ./target/debug
+MODE := RELEASE
+ifeq "$(MODE)" "RELEASE"
+	TARGET_DIR := ./target/release
+	BUILD_FLAG := --release
+else
+	TARGET_DIR := ./target/debug
+	BUILD_FLAG := 
+endif
 
 ARGS := --output /dev/stdout --cyclic
 
@@ -16,7 +23,7 @@ help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 build: ## Build all the binaries
-	docker run --rm -it --user $(id -u):$(id -g)"" -e CARGO_HOME=$(CARGO_HOME) -v "$(PWD)":$(WORKDIR) -w $(WORKDIR) $(DOCKER_IMG) cargo build --all-targets
+	docker run --rm -it --user $(id -u):$(id -g)"" -e CARGO_HOME=$(CARGO_HOME) -v "$(PWD)":$(WORKDIR) -w $(WORKDIR) $(DOCKER_IMG) cargo build --all-targets $(BUILD_FLAG)
 
 run-impl: ## Run the implementation binary. Usage: make run-impl [INPUT_FILE_PATH="file/path" | ARGS="--help"]
 	$(TARGET_DIR)/cim-implementation --input $(INPUT_FILE_PATH) $(ARGS)
