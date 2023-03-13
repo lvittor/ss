@@ -9,7 +9,7 @@ INPUT_FILE_PATH := ../data/input.txt
 OUTPUT_FILE_PATH := ../data/output.txt
 TARGET_DIR := ./target/debug
 
-ARGS := -o /dev/stdout -c
+ARGS := --output /dev/stdout --cyclic
 
 
 help:
