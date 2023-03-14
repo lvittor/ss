@@ -56,9 +56,10 @@ def q2():
                                     brute_force=brute_force)
                 for run_time in run_times:
                     df = pd.concat(
-                        [df, pd.DataFrame([{'N': N, 'M': M, 'cyclic': cyclic, 'brute_force': brute_force, 'time': run_time}], columns=df.columns)])
+                        [df, pd.DataFrame([{'N': N, 'M': M, 'cyclic': cyclic, 'brute_force': brute_force, 'time': run_time}], columns=df.columns)], ignore_index=True)
+                avg = sum(run_times) / len(run_times)
                 print(
-                    f"cyclic={cyclic}, brute_force={brute_force}, times={run_times}")
+                    f"cyclic={cyclic}, brute_force={brute_force}, times={avg}")
             print("=====================================")
 
     df.to_pickle("data/simulation_runs.pkl")
