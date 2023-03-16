@@ -4,7 +4,7 @@ use std::{
 };
 
 use chumsky::Parser;
-use cim_implementation::{
+use tp1::{
     cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder, parser::input_parser,
     particles::ParticlesData, simple_finder::SimpleNeighborFinder,
 };
