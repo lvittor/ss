@@ -2,7 +2,7 @@
 
 use cgmath::MetricSpace;
 use chumsky::Parser;
-use tp1::{
+use cim::{
     neighbor_finder::NeighborMap,
     parser::{input_parser, output_parser},
     particles::{ParticlesData, ID},

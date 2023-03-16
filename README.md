@@ -9,21 +9,39 @@ go to http://127.0.0.1:8899/lab (password: ss)
 
 # Rust projects
 
-Show targets
+#### Make arguments:
+
+```
+USE_DOCKER=TRUE (default) | FALSE
+ARGS=
+BIN=
+PACKAGE=
+```
+
+
+## Show targets
 
 ```bash
 make -f Makefile.rust
 ```
 
-# Build
+## Build all targets
 
 ```bash
 make -f Makefile.rust build
 ```
 
-# Run
+## Build and run
 
-## Implementation
+```bash
+make -f Makefile.rust run BIN=$(BINARY-NAME) ARGS=
+```
+
+## Run
+
+### TP1 Specific
+
+#### Implementation
 
 Run CIM method by default
 
@@ -37,7 +55,7 @@ Run with bruteforce
 make -f Makefile.rust run-impl ARGS="-o /dev/stdout -b"
 ```
 
-## Visualization
+#### Visualization
 
 ```
 make -f Makefile.rust run-viz

@@ -1,14 +1,11 @@
-use std::{
-    fs,
-    time::Instant,
-};
+use std::{fs, time::Instant};
 
 use chumsky::Parser;
-use tp1::{
+use clap::Parser as _parser;
+use cim::{
     cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder, parser::input_parser,
     particles::ParticlesData, simple_finder::SimpleNeighborFinder,
 };
-use clap::Parser as _parser;
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]

@@ -1,15 +1,12 @@
 [package]
-name = "tp1"
+name = "cim"
 version = "0.1.0"
 edition = "2021"
-default-run = "cim-implementation"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = { workspace = true }
 cgmath = { workspace = true }
 chumsky = { workspace = true }
-cim = { path = "../../utils/cim" }
-clap = { workspace = true }
 itertools = { workspace = true }
-nannou = { workspace = true }
 ndarray = { workspace = true }

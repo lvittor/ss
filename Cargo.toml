@@ -2,4 +2,15 @@
 resolver = "2"
 members = [
     "TP1/tp1",
+    "TP2/tp2",
+    "utils/*",
 ]
+[workspace.dependencies]
+anyhow = "1.0.69"
+cgmath = "0.18.0"
+chumsky = "1.0.0-alpha.2"
+cim = { version = "0.1.0", path = "../../utils/cim" }
+clap = { version = "4.1.8", features = ["derive"] }
+itertools = "0.10.5"
+nannou = "0.18.1"
+ndarray = "0.15.6"
