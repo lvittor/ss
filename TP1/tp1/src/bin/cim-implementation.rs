@@ -1,11 +1,13 @@
 use std::{fs, time::Instant};
 
 use chumsky::Parser;
-use clap::Parser as _parser;
 use cim::{
-    cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder,
-    particles::ParticlesData, simple_finder::SimpleNeighborFinder,
+    cim_finder::{self, CimNeighborFinder},
+    neighbor_finder::NeighborFinder,
+    particles::ParticlesData,
+    simple_finder::{self, SimpleNeighborFinder},
 };
+use clap::Parser as _parser;
 use tp1::parser::input_parser;
 
 #[derive(clap::Parser, Debug)]
@@ -35,9 +37,24 @@ fn main() {
 
     let start = Instant::now();
     let output = if args.brute_force {
-        SimpleNeighborFinder::find_neighbors(&input, args.cyclic)
+        SimpleNeighborFinder::find_neighbors(
+            &input.particles,
+            simple_finder::SystemInfo {
+                cyclic: args.cyclic,
+                interaction_radius: input.interaction_radius,
+                space_length: input.space_length,
+            },
+        )
     } else {
-        CimNeighborFinder::find_neighbors(&input, args.cyclic)
+        CimNeighborFinder::find_neighbors(
+            &input.particles,
+            cim_finder::SystemInfo {
+                cyclic: args.cyclic,
+                interaction_radius: input.interaction_radius,
+                space_length: input.space_length,
+                grid_size: input.grid_size,
+            },
+        )
     };
     let end = Instant::now();
 

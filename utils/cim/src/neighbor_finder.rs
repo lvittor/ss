@@ -5,8 +5,8 @@ use std::{
     iter,
 };
 
-pub trait NeighborFinder<Particles, ID> {
-    fn find_neighbors(particles: &Particles, cyclic: bool) -> NeighborMap<ID>;
+pub trait NeighborFinder<Particle, SystemInfo> {
+    fn find_neighbors(particles: &[Particle], system: SystemInfo) -> NeighborMap<usize>;
 }
 
 #[derive(Debug, Default)]
