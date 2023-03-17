@@ -108,13 +108,13 @@ impl<I: Iterator> Iterator for Chunks<I> {
     }
 }
 
-trait MyItertools: Iterator + Sized {
-    fn my_chunks(self, size: usize) -> Chunks<Self> {
+trait CollectedChunks: Iterator + Sized {
+    fn collected_chunks(self, size: usize) -> Chunks<Self> {
         Chunks { inner: self, size }
     }
 }
 
-impl<I: Iterator> MyItertools for I {}
+impl<I: Iterator> CollectedChunks for I {}
 
 pub fn output_parser<B: BufRead>(
     particle_count: usize,
@@ -122,7 +122,7 @@ pub fn output_parser<B: BufRead>(
 ) -> impl Iterator<Item = Frame> {
     file.map(Result::unwrap)
         .into_iter()
-        .my_chunks(particle_count + 1)
+        .collected_chunks(particle_count + 1)
         .map(|frame| {
             let mut frame = frame.into_iter();
             let time: f64 = frame.next().unwrap().parse().unwrap();
