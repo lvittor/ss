@@ -7,10 +7,11 @@ members = [
 ]
 [workspace.dependencies]
 anyhow = "1.0.69"
-cgmath = "0.18.0"
+cgmath = { version = "0.18.0", features = ["rand"] }
 chumsky = "1.0.0-alpha.2"
-cim = { version = "0.1.0", path = "../../utils/cim" }
+cim = { path = "utils/cim" }
 clap = { version = "4.1.8", features = ["derive"] }
 itertools = "0.10.5"
 nannou = "0.18.1"
 ndarray = "0.15.6"
+rand = "0.8.5"

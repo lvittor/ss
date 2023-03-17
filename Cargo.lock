@@ -193,6 +193,7 @@ checksum = "1a98d30140e3296250832bbaaff83b27dcd6fa3cc70fb6f1f3e5c9c0023b5317"
 dependencies = [
  "approx 0.4.0",
  "num-traits",
+ "rand 0.8.5",
 ]
 
 [[package]]
@@ -2256,6 +2257,7 @@ version = "0.1.0"
 dependencies = [
  "cgmath",
  "cim",
+ "rand 0.8.5",
 ]
 
 [[package]]
