@@ -4,11 +4,10 @@ use chumsky::Parser;
 use cim::{
     cim_finder::{self, CimNeighborFinder},
     neighbor_finder::NeighborFinder,
-    particles::ParticlesData,
     simple_finder::{self, SimpleNeighborFinder},
 };
 use clap::Parser as _parser;
-use tp1::parser::input_parser;
+use tp1::{parser::input_parser, particle::ParticlesData};
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]

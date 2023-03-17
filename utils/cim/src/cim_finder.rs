@@ -3,7 +3,7 @@ use ndarray::{Array2, Dim};
 
 use crate::{
     neighbor_finder::{NeighborFinder, NeighborMap},
-    particles::{Particle, ID},
+    particles::{CircularParticle, ID},
 };
 
 pub struct CimNeighborFinder;
@@ -15,15 +15,15 @@ pub struct SystemInfo {
     pub grid_size: usize,
 }
 
-impl NeighborFinder<Particle, SystemInfo> for CimNeighborFinder {
-    fn find_neighbors(particles: &[Particle], system: SystemInfo) -> NeighborMap<ID> {
-        let mut cells: Array2<Vec<Particle>> =
+impl<P: CircularParticle> NeighborFinder<P, SystemInfo> for CimNeighborFinder {
+    fn find_neighbors(particles: &[P], system: SystemInfo) -> NeighborMap<ID> {
+        let mut cells: Array2<Vec<P>> =
             Array2::default(Dim([system.grid_size, system.grid_size]));
         let cell_length = system.space_length / system.grid_size as f64;
 
-        let get_cell_index = |particle: &Particle| {
+        let get_cell_index = |particle: &P| {
             particle
-                .position
+                .get_position()
                 .map(|v| (v / cell_length).floor() as usize)
         };
         let get_cells_to_check = |cell_index: Vector2<usize>| {
@@ -56,7 +56,7 @@ impl NeighborFinder<Particle, SystemInfo> for CimNeighborFinder {
             for other_cell in get_cells_to_check(cell_index) {
                 for other in &cells[(other_cell.y, other_cell.x)] {
                     // If we are in the same cell, we only check the same pair once.
-                    if (other_cell != cell_index || other.id > particle.id)
+                    if (other_cell != cell_index || other.get_id() > particle.get_id())
                         && particle.is_within_distance_of(
                             other,
                             system.interaction_radius,
@@ -64,7 +64,7 @@ impl NeighborFinder<Particle, SystemInfo> for CimNeighborFinder {
                             system.cyclic,
                         )
                     {
-                        map.add_pair(particle.id, other.id);
+                        map.add_pair(particle.get_id(), other.get_id());
                     }
                 }
             }

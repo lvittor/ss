@@ -3,10 +3,9 @@ use std::collections::{HashMap, HashSet};
 use cgmath::vec2;
 use chumsky::{prelude::*, text::newline};
 
-use cim::{
-    neighbor_finder::NeighborMap,
-    particles::{Particle, ParticlesData, ID},
-};
+use cim::{neighbor_finder::NeighborMap, particles::ID};
+
+use crate::particle::{Particle, ParticlesData};
 
 pub fn input_parser<'a>() -> impl Parser<'a, &'a str, ParticlesData, extra::Err<Rich<'a, char>>> {
     let digits = text::digits(10);

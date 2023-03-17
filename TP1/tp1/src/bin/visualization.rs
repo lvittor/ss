@@ -2,14 +2,14 @@
 
 use cgmath::MetricSpace;
 use chumsky::Parser;
-use cim::{
-    neighbor_finder::NeighborMap,
-    particles::{ParticlesData, ID},
-};
+use cim::{neighbor_finder::NeighborMap, particles::ID};
 use clap::Parser as _parser;
 use nannou::{color::IntoLinSrgba, draw::properties::ColorScalar, glam::Vec3Swizzles, prelude::*};
 use std::fs::read_to_string;
-use tp1::parser::{input_parser, output_parser};
+use tp1::{
+    parser::{input_parser, output_parser},
+    particle::ParticlesData,
+};
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]
