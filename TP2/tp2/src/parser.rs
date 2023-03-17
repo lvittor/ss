@@ -1,6 +1,17 @@
+use std::{
+    fs::File,
+    io::{BufRead, BufReader, Lines, Read},
+};
+
 use crate::particle::{Frame, InputData, Particle};
 use cgmath::vec2;
-use chumsky::{prelude::*, text::newline};
+use chumsky::{
+    input::{SliceInput, Stream, ValueInput},
+    prelude::*,
+    text::newline,
+};
+use cim::particles::ID;
+use itertools::Itertools;
 
 pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich<'a, char>>> {
     let digits = text::digits(10);
@@ -51,32 +62,93 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
         .then_ignore(end())
 }
 
-pub fn output_parser<'a>(particle_count: usize) -> impl IterParser<'a, &'a str, Frame> {
-    let digits = text::digits(10);
-    let unsigned = digits.map_slice(|s: &str| s.parse::<usize>().unwrap());
-    let num = just('-')
-        .or_not()
-        .then(text::int(10))
-        .then(just('.').then(digits).or_not())
-        .map_slice(|s: &str| s.parse().unwrap());
+//pub fn output_parser<'a, I: Iterator<Item = char>>(
+//particle_count: usize,
+//) -> impl IterParser<'a, Stream<I>, Frame> {
+//let digits = text::digits(10);
+//let unsigned = digits.map(|s: &str| s.parse::<usize>().unwrap());
+//let num = just('-')
+//.or_not()
+//.then(text::digits(10))
+//.then(just('.').then(digits).or_not())
+//.map_slice(|s: &str| s.parse().unwrap());
 
-    let particle_data = unsigned
-        .then_ignore(just(' '))
-        .then(num.separated_by_exactly::<_, _, 4>(just(' ')))
-        .map(|(id, [x, y, vx, vy])| Particle {
-            id,
-            position: vec2(x, y),
-            velocity: vec2(vx, vy),
-        });
+//let particle_data = unsigned
+//.then_ignore(just(' '))
+//.then(num.separated_by_exactly::<_, _, 4>(just(' ')))
+//.map(|(id, [x, y, vx, vy])| Particle {
+//id,
+//position: vec2(x, y),
+//velocity: vec2(vx, vy),
+//});
 
-    let frame = num
-        .then(
-            particle_data
-                .separated_by(newline())
-                .exactly(particle_count)
-                .collect(),
-        )
-        .map(|(time, particles)| Frame { time, particles });
+//let frame = num
+//.then(
+//particle_data
+//.separated_by(newline())
+//.exactly(particle_count)
+//.collect(),
+//)
+//.map(|(time, particles)| Frame { time, particles });
 
-    frame.separated_by(newline())
+//frame.separated_by(newline())
+//}
+
+struct Chunks<I> {
+    inner: I,
+    size: usize,
+}
+
+impl<I: Iterator> Iterator for Chunks<I> {
+    type Item = Vec<I::Item>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut values = vec![];
+        for _ in 0..self.size {
+            if let Some(value) = self.inner.next() {
+                values.push(value);
+            } else {
+                return None;
+            }
+        }
+        Some(values)
+    }
+}
+
+trait MyItertools: Iterator + Sized {
+    fn my_chunks(self, size: usize) -> Chunks<Self> {
+        Chunks { inner: self, size }
+    }
+}
+
+impl<I: Iterator> MyItertools for I {}
+
+pub fn output_parser<B: BufRead>(
+    particle_count: usize,
+    file: Lines<B>,
+) -> impl Iterator<Item = Frame> {
+    file.map(Result::unwrap)
+        .into_iter()
+        .my_chunks(particle_count + 1)
+        .map(|frame| {
+            let mut frame = frame.into_iter();
+            let time: f64 = frame.next().unwrap().parse().unwrap();
+            let particles = frame
+                .map(|line| {
+                    let mut values = line.split_whitespace();
+                    let id: ID = values.next().unwrap().parse().unwrap();
+                    let [x, y, vx, vy]: [f64; 4] = values
+                        .map(|v| v.parse().unwrap())
+                        .collect_vec()
+                        .try_into()
+                        .unwrap();
+                    Particle {
+                        id,
+                        position: vec2(x, y),
+                        velocity: vec2(vx, vy),
+                    }
+                })
+                .collect_vec();
+            Frame { time, particles }
+        })
 }

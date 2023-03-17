@@ -11,3 +11,6 @@ rand = { workspace = true }
 cim = { path = "../../utils/cim" }
 chumsky = { workspace = true }
 clap = { workspace = true }
+nannou = { workspace = true }
+utf8-chars = "2.0.3"
+itertools = { workspace = true }
