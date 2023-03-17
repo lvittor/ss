@@ -7,4 +7,7 @@ edition = "2021"
 
 [dependencies]
 cgmath = { workspace = true }
+rand = { workspace = true }
 cim = { path = "../../utils/cim" }
+chumsky = { workspace = true }
+clap = { workspace = true }

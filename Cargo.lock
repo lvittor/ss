@@ -2256,7 +2256,9 @@ name = "tp2"
 version = "0.1.0"
 dependencies = [
  "cgmath",
+ "chumsky",
  "cim",
+ "clap",
  "rand 0.8.5",
 ]
 
