@@ -1,5 +1,7 @@
+use std::fmt::{Display, Write};
+
 use cgmath::Vector2;
-use cim::particles::{ID, CircularParticle};
+use cim::particles::{CircularParticle, ID};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Particle {
@@ -22,7 +24,6 @@ impl CircularParticle for Particle {
     }
 }
 
-
 #[derive(Debug)]
 pub struct InputData {
     pub rng_seed: Option<usize>,
@@ -32,10 +33,26 @@ pub struct InputData {
     pub particles: Vec<Particle>,
 }
 
-
 #[derive(Debug, Clone)]
 pub struct Frame {
     pub time: f64,
     pub particles: Vec<Particle>,
 }
 
+impl Display for Frame {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{}\n", self.time))?;
+        for particle in &self.particles {
+            f.write_fmt(format_args!(
+                "{} {} {} {} {}\n",
+                particle.id,
+                particle.position.x,
+                particle.position.y,
+                particle.velocity.x,
+                particle.velocity.y
+            ))?;
+        }
+
+        Ok(())
+    }
+}
