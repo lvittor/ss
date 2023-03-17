@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use cgmath::vec2;
 use chumsky::{prelude::*, text::newline};
 
-use crate::{
+use cim::{
     neighbor_finder::NeighborMap,
     particles::{Particle, ParticlesData, ID},
 };
@@ -59,9 +59,12 @@ pub fn output_parser<'a>() -> impl Parser<'a, &'a str, NeighborMap<ID>, extra::E
     let digits = text::digits(10);
     let unsigned = digits.map_slice(|s: &str| s.parse::<usize>().unwrap());
 
-    let line = unsigned
-        .then_ignore(just(' '))
-        .then(unsigned.separated_by(just(' ')).at_least(0).collect::<HashSet<_>>());
+    let line = unsigned.then_ignore(just(' ')).then(
+        unsigned
+            .separated_by(just(' '))
+            .at_least(0)
+            .collect::<HashSet<_>>(),
+    );
 
     line.separated_by(newline())
         .allow_trailing()

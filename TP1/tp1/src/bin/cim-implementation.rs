@@ -3,9 +3,10 @@ use std::{fs, time::Instant};
 use chumsky::Parser;
 use clap::Parser as _parser;
 use cim::{
-    cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder, parser::input_parser,
+    cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder,
     particles::ParticlesData, simple_finder::SimpleNeighborFinder,
 };
+use tp1::parser::input_parser;
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]
