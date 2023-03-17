@@ -1,10 +1,10 @@
 use std::io::{BufRead, Lines};
 
 use crate::particle::{Frame, InputData, Particle};
-use cgmath::vec2;
-use chumsky::{input::ValueInput, prelude::*, text::newline};
+use chumsky::{prelude::*, text::newline};
 use cim::particles::ID;
 use itertools::Itertools;
+use nalgebra::Vector2;
 
 pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich<'a, char>>> {
     let digits = text::digits(10);
@@ -22,8 +22,8 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
         .then(num.separated_by_exactly::<_, _, 4>(just(' ')))
         .map(|(id, [x, y, vx, vy])| Particle {
             id,
-            position: vec2(x, y),
-            velocity: vec2(vx, vy),
+            position: Vector2::new(x, y),
+            velocity: Vector2::new(vx, vy),
         });
 
     let particles = particle_data
@@ -137,8 +137,8 @@ pub fn output_parser<B: BufRead>(
                         .unwrap();
                     Particle {
                         id,
-                        position: vec2(x, y),
-                        velocity: vec2(vx, vy),
+                        position: Vector2::new(x, y),
+                        velocity: Vector2::new(vx, vy),
                     }
                 })
                 .collect_vec();

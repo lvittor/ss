@@ -1,8 +1,17 @@
-use std::fs;
+use std::{collections::HashMap, fs, iter, ops::RemAssign};
 
 use chumsky::Parser;
-use cim::{cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder};
-use tp2::parser::input_parser;
+use cim::{
+    cim_finder::CimNeighborFinder,
+    neighbor_finder::{self, NeighborFinder},
+};
+use itertools::Itertools;
+use nalgebra::{AbstractRotation, Rotation2, Vector2};
+use rand::{distributions::Uniform, Rng};
+use tp2::{
+    parser::input_parser,
+    particle::{InputData, Particle, Frame},
+};
 
 use clap::Parser as _parser;
 
@@ -16,6 +25,63 @@ struct Args {
     output: Option<String>,
 }
 
+fn run(config: InputData) {
+    let dt = 1.0;
+    let mut time = 0.0;
+    let mut state: HashMap<_, _> = config.particles.into_iter().map(|p| (p.id, p)).collect();
+    let mut rng = rand::thread_rng();
+    loop {
+        let m = (config.space_length / config.interaction_radius).floor() as usize;
+        let neighbors = CimNeighborFinder::find_neighbors(
+            &state.values().cloned().collect_vec(),
+            cim::cim_finder::SystemInfo {
+                cyclic: true,
+                interaction_radius: config.interaction_radius,
+                space_length: config.space_length,
+                grid_size: m,
+            },
+        );
+
+        let mut new_state = HashMap::new();
+        for (&id, particle) in &state {
+            let mut cos_sum = 0.0;
+            let mut sin_sum = 0.0;
+            let particle_neighbors = neighbors.get_neighbors(id);
+            for neighbor in particle_neighbors
+                .iter()
+                .chain(iter::once(&id))
+                .map(|i| state[i])
+            {
+                cos_sum += neighbor.position.x / 0.03;
+                sin_sum += neighbor.position.y / 0.03;
+            }
+            let angle = f64::atan2(sin_sum, cos_sum)
+                + rng.sample(Uniform::new_inclusive(
+                    -config.noise / 2.0,
+                    config.noise / 2.0,
+                ));
+
+            let new_velocity = Rotation2::new(angle).transform_vector(&Vector2::new(0.03, 0.0));
+
+            new_state.insert(
+                id,
+                Particle {
+                    id,
+                    position: (particle.position + particle.velocity * dt)
+                        .apply_into(|f| *f = f.rem_euclid(config.space_length)),
+                    velocity: new_velocity,
+                },
+            );
+        }
+        print!("{}", Frame {
+            time,
+            particles: state.values().cloned().collect_vec()
+        });
+        state = new_state;
+        time += dt;
+    }
+}
+
 fn main() {
     let args = Args::parse();
 
@@ -25,16 +91,5 @@ fn main() {
         .into_result()
         .expect("Error parsing input data.");
 
-    let m = (input.space_length / input.interaction_radius).floor() as usize;
-    let neighbors = CimNeighborFinder::find_neighbors(
-        &input.particles,
-        cim::cim_finder::SystemInfo {
-            cyclic: true,
-            interaction_radius: input.interaction_radius,
-            space_length: input.space_length,
-            grid_size: m,
-        },
-    );
-
-    dbg!(neighbors);
+    run(input);
 }

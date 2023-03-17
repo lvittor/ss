@@ -1,9 +1,9 @@
 use std::collections::{HashMap, HashSet};
 
-use cgmath::vec2;
 use chumsky::{prelude::*, text::newline};
 
 use cim::{neighbor_finder::NeighborMap, particles::ID};
+use nalgebra::Vector2;
 
 use crate::particle::{Particle, ParticlesData};
 
@@ -22,7 +22,7 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, ParticlesData, extra::Err<
         .then(num.separated_by_exactly::<_, _, 3>(just(' ')))
         .map(|(id, [x, y, r])| Particle {
             id,
-            position: vec2(x, y),
+            position: Vector2::new(x, y),
             radius: r,
         });
 

@@ -1,7 +1,7 @@
-use std::fmt::{Display, Write};
+use std::fmt::{Display};
 
-use cgmath::Vector2;
 use cim::particles::{CircularParticle, ID};
+use nalgebra::Vector2;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Particle {

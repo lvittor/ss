@@ -1,4 +1,6 @@
-use cgmath::{num_traits::Euclid, vec2, Vector2};
+use std::ops::Div;
+
+use nalgebra::Vector2;
 use ndarray::{Array2, Dim};
 
 use crate::{
@@ -20,26 +22,35 @@ impl<P: CircularParticle> NeighborFinder<P, SystemInfo> for CimNeighborFinder {
         let mut cells: Array2<Vec<P>> = Array2::default(Dim([system.grid_size, system.grid_size]));
         let cell_length = system.space_length / system.grid_size as f64;
 
-        let get_cell_index = |particle: &P| {
+        let get_cell_index = |particle: &P| -> Vector2<usize> {
             particle
                 .get_position()
-                .map(|v| (v / cell_length).floor() as usize)
+                .div(cell_length)
+                .apply_into(|v| *v = v.floor())
+                .try_cast()
+                .unwrap()
         };
         let get_cells_to_check = |cell_index: Vector2<usize>| {
-            [vec2(0, 0), vec2(1, 0), vec2(1, 1), vec2(0, 1), vec2(-1, 1)]
-                .into_iter()
-                .filter_map(move |v| {
-                    let new_index = v + cell_index.cast().unwrap();
-                    if system.cyclic {
-                        Some(new_index.map(|v| v.rem_euclid(&(system.grid_size as i32)) as usize))
-                    } else {
-                        (new_index.x >= 0
-                            && new_index.y >= 0
-                            && (new_index.x as usize) < system.grid_size
-                            && (new_index.y as usize) < system.grid_size)
-                            .then(|| new_index.cast().unwrap())
-                    }
-                })
+            [
+                Vector2::new(0i32, 0),
+                Vector2::new(1, 0),
+                Vector2::new(1, 1),
+                Vector2::new(0, 1),
+                Vector2::new(-1, 1),
+            ]
+            .into_iter()
+            .filter_map(move |v| {
+                let new_index = v + cell_index.cast();
+                if system.cyclic {
+                    Some(new_index.map(|v| v.rem_euclid(system.grid_size as i32) as usize))
+                } else {
+                    (new_index.x >= 0
+                        && new_index.y >= 0
+                        && (new_index.x as usize) < system.grid_size
+                        && (new_index.y as usize) < system.grid_size)
+                        .then(|| new_index.try_cast().unwrap())
+                }
+            })
         };
 
         // Fill the cell matrix with particles.

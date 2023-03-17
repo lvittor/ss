@@ -6,10 +6,10 @@ default-run = "cim-implementation"
 
 [dependencies]
 anyhow = { workspace = true }
-cgmath = { workspace = true }
 chumsky = { workspace = true }
 cim = { workspace = true }
 clap = { workspace = true }
 itertools = { workspace = true }
 nannou = { workspace = true }
 ndarray = { workspace = true }
+nalgebra = { workspace = true }

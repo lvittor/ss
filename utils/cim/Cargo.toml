@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-cgmath = { workspace = true }
 chumsky = { workspace = true }
 itertools = { workspace = true }
 ndarray = { workspace = true }
+nalgebra = { workspace = true }

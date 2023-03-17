@@ -1,11 +1,11 @@
 #![feature(is_some_and)]
 
-use cgmath::MetricSpace;
 use chumsky::Parser;
 use cim::{neighbor_finder::NeighborMap, particles::ID};
 use clap::Parser as _parser;
+use nalgebra::Vector2;
 use nannou::{color::IntoLinSrgba, draw::properties::ColorScalar, glam::Vec3Swizzles, prelude::*};
-use std::fs::read_to_string;
+use std::{fs::read_to_string, ops::Sub};
 use tp1::{
     parser::{input_parser, output_parser},
     particle::ParticlesData,
@@ -69,8 +69,9 @@ fn event(app: &App, model: &mut Model, event: WindowEvent) {
         for particle in &model.particles.particles {
             if particle
                 .position
-                .distance(cgmath::vec2(pos.x, pos.y).cast().unwrap())
-                < particle.radius
+                .sub(Vector2::new(pos.x, pos.y).cast())
+                .magnitude_squared()
+                < particle.radius.powi(2)
             {
                 model.selected_particle = Some(particle.id);
                 break;

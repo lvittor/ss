@@ -27,6 +27,10 @@ impl<ID: Hash + Eq + Copy> NeighborMap<ID> {
     pub fn has_pair(&self, p1: ID, p2: ID) -> bool {
         self.map.get(&p1).is_some_and(|s| s.contains(&p2))
     }
+
+    pub fn get_neighbors(&self, p1: ID) -> &HashSet<ID> {
+        &self.map[&p1]
+    }
 }
 
 impl<ID: ToString> Display for NeighborMap<ID> {

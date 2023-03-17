@@ -84,9 +84,10 @@ fn view(app: &App, model: &Model, frame: nannou::Frame) {
     draw.background().color(BLACK);
     for particle in &model.frame.particles {
         draw.ellipse()
+            .resolution(10.0)
             .x(particle.position.x as f32)
             .y(particle.position.y as f32)
-            .radius(0.1)
+            .radius(0.05)
             .color(srgba(1.0, 1.0, 1.0, 0.7))
             .stroke(WHITE)
             .stroke_weight(0.25);

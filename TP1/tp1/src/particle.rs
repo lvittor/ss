@@ -1,5 +1,5 @@
-use cgmath::Vector2;
 use cim::particles::{CircularParticle, ID};
+use nalgebra::Vector2;
 
 #[derive(Debug)]
 pub struct ParticlesData {
@@ -25,7 +25,7 @@ impl CircularParticle for Particle {
         self.radius
     }
 
-    fn get_position(&self) -> cgmath::Vector2<f64> {
+    fn get_position(&self) -> Vector2<f64> {
         self.position
     }
 }
