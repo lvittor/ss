@@ -1,15 +1,8 @@
-use std::{
-    fs::File,
-    io::{BufRead, BufReader, Lines, Read},
-};
+use std::io::{BufRead, Lines};
 
 use crate::particle::{Frame, InputData, Particle};
 use cgmath::vec2;
-use chumsky::{
-    input::{SliceInput, Stream, ValueInput},
-    prelude::*,
-    text::newline,
-};
+use chumsky::{input::ValueInput, prelude::*, text::newline};
 use cim::particles::ID;
 use itertools::Itertools;
 

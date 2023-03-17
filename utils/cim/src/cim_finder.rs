@@ -17,8 +17,7 @@ pub struct SystemInfo {
 
 impl<P: CircularParticle> NeighborFinder<P, SystemInfo> for CimNeighborFinder {
     fn find_neighbors(particles: &[P], system: SystemInfo) -> NeighborMap<ID> {
-        let mut cells: Array2<Vec<P>> =
-            Array2::default(Dim([system.grid_size, system.grid_size]));
+        let mut cells: Array2<Vec<P>> = Array2::default(Dim([system.grid_size, system.grid_size]));
         let cell_length = system.space_length / system.grid_size as f64;
 
         let get_cell_index = |particle: &P| {
