@@ -1,6 +1,6 @@
+use crate::particle::{Frame, InputData, Particle};
 use cgmath::vec2;
 use chumsky::{prelude::*, text::newline};
-use crate::particle::{Particle, InputData};
 
 pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich<'a, char>>> {
     let digits = text::digits(10);
@@ -28,8 +28,7 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
         .allow_trailing()
         .collect();
 
-    seed
-        .then_ignore(newline())
+    seed.then_ignore(newline())
         .then(unsigned)
         .then_ignore(newline())
         .then(num)
@@ -46,27 +45,38 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
                 space_length,
                 interaction_radius,
                 particles,
-                noise
+                noise,
             },
         )
         .then_ignore(end())
 }
 
-// pub fn output_parser<'a>() -> impl Parser<'a, &'a str, NeighborMap<ID>, extra::Err<Rich<'a, char>>>
-// {
-//     let digits = text::digits(10);
-//     let unsigned = digits.map_slice(|s: &str| s.parse::<usize>().unwrap());
+pub fn output_parser<'a>(particle_count: usize) -> impl IterParser<'a, &'a str, Frame> {
+    let digits = text::digits(10);
+    let unsigned = digits.map_slice(|s: &str| s.parse::<usize>().unwrap());
+    let num = just('-')
+        .or_not()
+        .then(text::int(10))
+        .then(just('.').then(digits).or_not())
+        .map_slice(|s: &str| s.parse().unwrap());
 
-//     let line = unsigned.then_ignore(just(' ')).then(
-//         unsigned
-//             .separated_by(just(' '))
-//             .at_least(0)
-//             .collect::<HashSet<_>>(),
-//     );
+    let particle_data = unsigned
+        .then_ignore(just(' '))
+        .then(num.separated_by_exactly::<_, _, 4>(just(' ')))
+        .map(|(id, [x, y, vx, vy])| Particle {
+            id,
+            position: vec2(x, y),
+            velocity: vec2(vx, vy),
+        });
 
-//     line.separated_by(newline())
-//         .allow_trailing()
-//         .collect::<Vec<_>>()
-//         .map(|lines| NeighborMap::new(HashMap::from_iter(lines)))
-//         .then_ignore(end())
-// }
+    let frame = num
+        .then(
+            particle_data
+                .separated_by(newline())
+                .exactly(particle_count)
+                .collect(),
+        )
+        .map(|(time, particles)| Frame { time, particles });
+
+    frame.separated_by(newline())
+}

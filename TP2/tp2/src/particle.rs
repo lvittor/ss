@@ -31,3 +31,11 @@ pub struct InputData {
     pub noise: f64,
     pub particles: Vec<Particle>,
 }
+
+
+#[derive(Debug, Clone)]
+pub struct Frame {
+    pub time: f64,
+    pub particles: Vec<Particle>,
+}
+
