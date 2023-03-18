@@ -51,8 +51,8 @@ fn run(config: InputData) {
                 .chain(iter::once(&id))
                 .map(|i| state[i])
             {
-                cos_sum += neighbor.position.x / 0.03;
-                sin_sum += neighbor.position.y / 0.03;
+                cos_sum += neighbor.velocity.x / 0.03;
+                sin_sum += neighbor.velocity.y / 0.03;
             }
             let angle = f64::atan2(sin_sum, cos_sum)
                 + rng.sample(Uniform::new_inclusive(
