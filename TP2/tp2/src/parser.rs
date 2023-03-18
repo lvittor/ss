@@ -24,7 +24,7 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
         .map(|(id, [x, y, a])| Particle {
             id,
             position: Vector2::new(x, y),
-            velocity: Rotation2::new(a).transform_vector(&Vector2::x()),
+            velocity_direction: Rotation2::new(a).transform_vector(&Vector2::x()),
         });
 
     let particles = particle_data
@@ -57,13 +57,7 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
                     interaction_radius,
                     noise,
                     speed,
-                    particles: particles
-                        .into_iter()
-                        .map(|mut p| {
-                            p.velocity *= speed;
-                            p
-                        })
-                        .collect_vec(),
+                    particles,
                 }
             },
         )
@@ -153,7 +147,7 @@ pub fn output_parser<B: BufRead>(
                     Particle {
                         id,
                         position: Vector2::new(x, y),
-                        velocity: Vector2::new(vx, vy),
+                        velocity_direction: Vector2::new(vx, vy),
                     }
                 })
                 .collect_vec();

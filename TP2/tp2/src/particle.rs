@@ -7,7 +7,7 @@ use nalgebra::Vector2;
 pub struct Particle {
     pub id: ID,
     pub position: Vector2<f64>,
-    pub velocity: Vector2<f64>,
+    pub velocity_direction: Vector2<f64>,
 }
 
 impl CircularParticle for Particle {
@@ -49,8 +49,8 @@ impl Display for Frame {
                 particle.id,
                 particle.position.x,
                 particle.position.y,
-                particle.velocity.x,
-                particle.velocity.y
+                particle.velocity_direction.x,
+                particle.velocity_direction.y
             ))?;
         }
 

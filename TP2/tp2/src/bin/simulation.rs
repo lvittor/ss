@@ -58,8 +58,8 @@ fn run<W: Write>(config: InputData, mut output_writer: W) {
                 .chain(iter::once(&id))
                 .map(|i| state[i])
             {
-                cos_sum += neighbor.velocity.x / config.speed;
-                sin_sum += neighbor.velocity.y / config.speed;
+                cos_sum += neighbor.velocity_direction.x;
+                sin_sum += neighbor.velocity_direction.y;
             }
             let angle = f64::atan2(sin_sum, cos_sum)
                 + rng.sample(Uniform::new_inclusive(
@@ -68,15 +68,15 @@ fn run<W: Write>(config: InputData, mut output_writer: W) {
                 ));
 
             let new_velocity =
-                Rotation2::new(angle).transform_vector(&Vector2::new(config.speed, 0.0));
+                Rotation2::new(angle).transform_vector(&Vector2::x());
 
             new_state.insert(
                 id,
                 Particle {
                     id,
-                    position: (particle.position + particle.velocity * dt)
+                    position: (particle.position + particle.velocity_direction * config.speed * dt)
                         .apply_into(|f| *f = f.rem_euclid(config.space_length)),
-                    velocity: new_velocity,
+                    velocity_direction: new_velocity,
                 },
             );
         }
