@@ -675,6 +675,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
+name = "frame_capturer"
+version = "0.1.0"
+dependencies = [
+ "nannou",
+]
+
+[[package]]
 name = "futures"
 version = "0.3.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2313,6 +2320,7 @@ dependencies = [
  "chumsky",
  "cim",
  "clap",
+ "frame_capturer",
  "itertools",
  "nalgebra",
  "nannou",

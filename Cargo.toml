@@ -10,6 +10,7 @@ anyhow = "1.0.69"
 cgmath = { version = "0.18.0", features = ["rand"] }
 chumsky = "1.0.0-alpha.2"
 cim = { path = "utils/cim" }
+frame_capturer = { path = "utils/frame_capturer" }
 clap = { version = "4.1.8", features = ["derive"] }
 itertools = "0.10.5"
 nannou = "0.18.1"
