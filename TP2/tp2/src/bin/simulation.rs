@@ -1,4 +1,9 @@
-use std::{collections::{HashMap, BTreeMap}, fs, iter};
+use std::{
+    collections::{BTreeMap, HashMap},
+    fs::{self, File},
+    io::{stdout, LineWriter, Write},
+    iter,
+};
 
 use chumsky::Parser;
 use cim::{cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder};
@@ -22,7 +27,7 @@ struct Args {
     output: Option<String>,
 }
 
-fn run(config: InputData) {
+fn run<W: Write>(config: InputData, mut output_writer: W) {
     let dt = 1.0;
     let mut time = 0.0;
     let mut state: BTreeMap<_, _> = config.particles.into_iter().map(|p| (p.id, p)).collect();
@@ -74,13 +79,11 @@ fn run(config: InputData) {
                 },
             );
         }
-        print!(
-            "{}",
-            Frame {
-                time,
-                particles: state.values().cloned().collect_vec()
-            }
-        );
+        let frame = Frame {
+            time,
+            particles: state.values().cloned().collect_vec(),
+        };
+        output_writer.write_fmt(format_args!("{frame}")).unwrap();
         state = new_state;
         time += dt;
     }
@@ -95,5 +98,11 @@ fn main() {
         .into_result()
         .expect("Error parsing input data.");
 
-    run(input);
+    let writer = if let Some(output) = args.output {
+        Box::new(File::create(output).unwrap()) as Box<dyn Write>
+    } else {
+        Box::new(stdout())
+    };
+
+    run(input, writer);
 }
