@@ -2,6 +2,11 @@ use std::path::PathBuf;
 
 use nannou::prelude::*;
 
+pub enum CaptureMode {
+    NoCapture,
+    Capture { directory: PathBuf },
+}
+
 pub struct FrameCapturer {
     // The texture that we will draw to.
     texture: wgpu::Texture,
@@ -14,13 +19,13 @@ pub struct FrameCapturer {
     // The type used to resize our texture to the window texture.
     pub texture_reshaper: wgpu::TextureReshaper,
 
-    capture_directory: PathBuf,
+    capture_mode: CaptureMode,
 
     frame_count: usize,
 }
 
 impl FrameCapturer {
-    pub fn new(window: &Window, texture_size: [u32; 2], capture_directory: PathBuf) -> Self {
+    pub fn new(window: &Window, texture_size: [u32; 2], capture_mode: CaptureMode) -> Self {
         // Retrieve the wgpu device.
         let device = window.device();
 
@@ -60,8 +65,10 @@ impl FrameCapturer {
             dst_format,
         );
 
-        // Make sure the directory where we will save images to exists.
-        std::fs::create_dir_all(&capture_directory).unwrap();
+        if let CaptureMode::Capture { directory } = &capture_mode {
+            // Make sure the directory where we will save images to exists.
+            std::fs::create_dir_all(directory).unwrap();
+        }
 
         Self {
             texture,
@@ -69,7 +76,7 @@ impl FrameCapturer {
             renderer,
             texture_capturer,
             texture_reshaper,
-            capture_directory,
+            capture_mode,
             frame_count: 0,
         }
     }
@@ -84,35 +91,41 @@ impl FrameCapturer {
         self.renderer
             .render_to_texture(device, &mut encoder, &self.draw, &self.texture);
 
-        // Take a snapshot of the texture. The capturer will do the following:
-        //
-        // 1. Resolve the texture to a non-multisampled texture if necessary.
-        // 2. Convert the format to non-linear 8-bit sRGBA ready for image storage.
-        // 3. Copy the result to a buffer ready to be mapped for reading.
-        let snapshot = self
-            .texture_capturer
-            .capture(device, &mut encoder, &self.texture);
+        match &self.capture_mode {
+            CaptureMode::NoCapture => {
+                // Submit the commands for our drawing and texture capture to the GPU.
+                window.queue().submit(Some(encoder.finish()));
+            }
+            CaptureMode::Capture { directory } => {
+                // Take a snapshot of the texture. The capturer will do the following:
+                //
+                // 1. Resolve the texture to a non-multisampled texture if necessary.
+                // 2. Convert the format to non-linear 8-bit sRGBA ready for image storage.
+                // 3. Copy the result to a buffer ready to be mapped for reading.
+                let snapshot = self
+                    .texture_capturer
+                    .capture(device, &mut encoder, &self.texture);
 
-        // Submit the commands for our drawing and texture capture to the GPU.
-        window.queue().submit(Some(encoder.finish()));
+                // Submit the commands for our drawing and texture capture to the GPU.
+                window.queue().submit(Some(encoder.finish()));
 
-        // Submit a function for writing our snapshot to a PNG.
-        //
-        // NOTE: It is essential that the commands for capturing the snapshot are `submit`ted before we
-        // attempt to read the snapshot - otherwise we will read a blank texture!
-        let path = self
-            .capture_directory
-            .join(format!("{:05}", self.frame_count))
-            .with_extension("png");
-        snapshot
-            .read(move |result| {
-                let image = result.expect("failed to map texture memory").to_owned();
-                image
-                    .save(&path)
-                    .expect("failed to save texture to png image");
-            })
-            .unwrap();
-
+                // Submit a function for writing our snapshot to a PNG.
+                //
+                // NOTE: It is essential that the commands for capturing the snapshot are `submit`ted before we
+                // attempt to read the snapshot - otherwise we will read a blank texture!
+                let path = directory
+                    .join(format!("{:05}", self.frame_count))
+                    .with_extension("png");
+                snapshot
+                    .read(move |result| {
+                        let image = result.expect("failed to map texture memory").to_owned();
+                        image
+                            .save(&path)
+                            .expect("failed to save texture to png image");
+                    })
+                    .unwrap();
+            }
+        }
         self.frame_count += 1;
     }
 

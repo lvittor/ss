@@ -82,7 +82,9 @@ fn model(app: &App) -> Model {
         frame_capturer: FrameCapturer::new(
             &app.window(window).unwrap(),
             texture_size,
-            Path::new("./captures").to_owned(),
+            frame_capturer::CaptureMode::Capture {
+                directory: Path::new("./captures").to_owned(),
+            },
         ),
     }
 }
