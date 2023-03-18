@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeSet, BTreeMap},
     fmt::{Display, Write},
     hash::Hash,
     iter,
@@ -13,11 +13,11 @@ pub trait NeighborFinder<Particle, SystemInfo> {
 
 #[derive(Debug, Default)]
 pub struct NeighborMap<ID> {
-    map: HashMap<ID, HashSet<ID>>,
+    map: BTreeMap<ID, BTreeSet<ID>>,
 }
 
-impl<ID: Hash + Eq + Copy> NeighborMap<ID> {
-    pub fn new(map: HashMap<ID, HashSet<ID>>) -> Self {
+impl<ID: Hash + Ord + Eq + Copy> NeighborMap<ID> {
+    pub fn new(map: BTreeMap<ID, BTreeSet<ID>>) -> Self {
         Self { map }
     }
 

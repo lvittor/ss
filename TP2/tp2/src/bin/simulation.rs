@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs, iter};
+use std::{collections::{HashMap, BTreeMap}, fs, iter};
 
 use chumsky::Parser;
 use cim::{cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder};
@@ -25,7 +25,7 @@ struct Args {
 fn run(config: InputData) {
     let dt = 1.0;
     let mut time = 0.0;
-    let mut state: HashMap<_, _> = config.particles.into_iter().map(|p| (p.id, p)).collect();
+    let mut state: BTreeMap<_, _> = config.particles.into_iter().map(|p| (p.id, p)).collect();
     let mut rng = if let Some(seed) = config.rng_seed {
         StdRng::seed_from_u64(seed)
     } else {
@@ -44,7 +44,7 @@ fn run(config: InputData) {
             },
         );
 
-        let mut new_state = HashMap::new();
+        let mut new_state = BTreeMap::new();
         for (&id, particle) in &state {
             let mut cos_sum = 0.0;
             let mut sin_sum = 0.0;

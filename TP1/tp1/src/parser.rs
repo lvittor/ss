@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, BTreeMap};
 
 use chumsky::{prelude::*, text::newline};
 
@@ -62,12 +62,12 @@ pub fn output_parser<'a>() -> impl Parser<'a, &'a str, NeighborMap<ID>, extra::E
         unsigned
             .separated_by(just(' '))
             .at_least(0)
-            .collect::<HashSet<_>>(),
+            .collect::<BTreeSet<_>>(),
     );
 
     line.separated_by(newline())
         .allow_trailing()
         .collect::<Vec<_>>()
-        .map(|lines| NeighborMap::new(HashMap::from_iter(lines)))
+        .map(|lines| NeighborMap::new(BTreeMap::from_iter(lines)))
         .then_ignore(end())
 }
