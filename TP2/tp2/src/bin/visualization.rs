@@ -3,6 +3,7 @@
 use chumsky::Parser;
 use clap::Parser as _parser;
 use nannou::prelude::*;
+use nalgebra::Vector2;
 use std::{
     fs::{read_to_string, File},
     io::{BufRead, BufReader},
@@ -83,14 +84,12 @@ fn view(app: &App, model: &Model, frame: nannou::Frame) {
     let draw = app.draw().transform(model.space_to_window);
     draw.background().color(BLACK);
     for particle in &model.frame.particles {
-        draw.ellipse()
-            .resolution(8.0)
+        draw.polygon()
+            .points([vec2(-0.1, -0.1), vec2(-0.1, 0.1), vec2(0.15, 0.0)])
             .x(particle.position.x as f32)
             .y(particle.position.y as f32)
-            .radius(0.05)
             .color(srgba(1.0, 1.0, 1.0, 0.7))
-            .stroke(WHITE)
-            .stroke_weight(0.01);
+            .rotate(particle.velocity_direction.angle(&Vector2::x()) as f32)
     }
     draw.to_frame(app, &frame).unwrap();
 }
