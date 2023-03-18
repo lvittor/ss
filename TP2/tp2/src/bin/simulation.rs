@@ -10,7 +10,7 @@ use nalgebra::{AbstractRotation, Rotation2, Vector2};
 use rand::{distributions::Uniform, Rng};
 use tp2::{
     parser::input_parser,
-    particle::{InputData, Particle, Frame},
+    particle::{Frame, InputData, Particle},
 };
 
 use clap::Parser as _parser;
@@ -46,9 +46,8 @@ fn run(config: InputData) {
         for (&id, particle) in &state {
             let mut cos_sum = 0.0;
             let mut sin_sum = 0.0;
-            let particle_neighbors = neighbors.get_neighbors(id);
-            for neighbor in particle_neighbors
-                .iter()
+            for neighbor in neighbors
+                .get_neighbors(id)
                 .chain(iter::once(&id))
                 .map(|i| state[i])
             {
@@ -73,10 +72,13 @@ fn run(config: InputData) {
                 },
             );
         }
-        print!("{}", Frame {
-            time,
-            particles: state.values().cloned().collect_vec()
-        });
+        print!(
+            "{}",
+            Frame {
+                time,
+                particles: state.values().cloned().collect_vec()
+            }
+        );
         state = new_state;
         time += dt;
     }
