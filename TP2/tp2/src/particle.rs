@@ -26,7 +26,7 @@ impl CircularParticle for Particle {
 
 #[derive(Debug)]
 pub struct InputData {
-    pub rng_seed: Option<usize>,
+    pub rng_seed: Option<u64>,
     pub space_length: f64,
     pub interaction_radius: f64,
     pub noise: f64,

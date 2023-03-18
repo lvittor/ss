@@ -1,13 +1,10 @@
-use std::{collections::HashMap, fs, iter, ops::RemAssign};
+use std::{collections::HashMap, fs, iter};
 
 use chumsky::Parser;
-use cim::{
-    cim_finder::CimNeighborFinder,
-    neighbor_finder::{self, NeighborFinder},
-};
+use cim::{cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder};
 use itertools::Itertools;
-use nalgebra::{AbstractRotation, Rotation2, Vector2};
-use rand::{distributions::Uniform, Rng};
+use nalgebra::{Rotation2, Vector2};
+use rand::{distributions::Uniform, rngs::StdRng, Rng, SeedableRng};
 use tp2::{
     parser::input_parser,
     particle::{Frame, InputData, Particle},
@@ -29,7 +26,12 @@ fn run(config: InputData) {
     let dt = 1.0;
     let mut time = 0.0;
     let mut state: HashMap<_, _> = config.particles.into_iter().map(|p| (p.id, p)).collect();
-    let mut rng = rand::thread_rng();
+    let mut rng = if let Some(seed) = config.rng_seed {
+        StdRng::seed_from_u64(seed)
+    } else {
+        StdRng::from_entropy()
+    };
+
     loop {
         let m = (config.space_length / config.interaction_radius).floor() as usize;
         let neighbors = CimNeighborFinder::find_neighbors(

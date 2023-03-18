@@ -9,7 +9,8 @@ use nalgebra::Vector2;
 pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich<'a, char>>> {
     let digits = text::digits(10);
     let unsigned = digits.map_slice(|s: &str| s.parse::<usize>().unwrap());
-    let seed = just("any").to(None).or(unsigned.map(Some));
+    let unsigned64 = digits.map_slice(|s: &str| s.parse::<u64>().unwrap());
+    let seed = just("any").to(None).or(unsigned64.map(Some));
 
     let num = just('-')
         .or_not()
