@@ -61,7 +61,7 @@ impl FrameCapturer {
             &texture_view,
             sample_count,
             texture_sample_type,
-            sample_count,
+            1,
             dst_format,
         );
 
@@ -131,6 +131,14 @@ impl FrameCapturer {
 
     pub fn get_draw(&self) -> &Draw {
         &self.draw
+    }
+
+    pub fn draw_to_texture(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+        texture: &wgpu::TextureViewHandle,
+    ) {
+        self.texture_reshaper.encode_render_pass(texture, encoder);
     }
 
     pub fn draw_to_frame(&self, frame: Frame) {

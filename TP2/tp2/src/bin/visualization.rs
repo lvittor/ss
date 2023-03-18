@@ -7,6 +7,7 @@ use nalgebra::{Rotation2, Vector2};
 use nannou::{
     color::rgb_u32,
     prelude::{Rgb, *},
+    wgpu::ToTextureView,
 };
 use std::{
     fs::{read_to_string, File},
@@ -43,6 +44,8 @@ struct Model {
     space_to_texture: Mat4,
     frame_capturer: FrameCapturer,
     _window: window::Id,
+    texture_copy: wgpu::Texture,
+    texture_copy_view: wgpu::TextureView,
 }
 
 fn model(app: &App) -> Model {
@@ -73,6 +76,16 @@ fn model(app: &App) -> Model {
         });
 
     let window = app.new_window().view(view).build().unwrap();
+
+    let texture_copy = nannou::wgpu::TextureBuilder::new()
+        .size(texture_size)
+        .format(nannou::Frame::TEXTURE_FORMAT)
+        .sample_count(1)
+        .usage(wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING)
+        .build(app.window(window).unwrap().device());
+
+    let texture_copy_view = texture_copy.to_texture_view();
+
     Model {
         _window: window,
         frame: Frame {
@@ -85,10 +98,13 @@ fn model(app: &App) -> Model {
         frame_capturer: FrameCapturer::new(
             &app.window(window).unwrap(),
             texture_size,
-            args.capture_directory
-                .map(|directory| CaptureMode::Capture { directory })
-                .unwrap_or(CaptureMode::NoCapture),
+            match args.capture_directory {
+                Some(directory) => CaptureMode::Capture { directory },
+                None => CaptureMode::NoCapture,
+            },
         ),
+        texture_copy,
+        texture_copy_view,
     }
 }
 
@@ -127,8 +143,25 @@ fn parse_hex_color(s: &str) -> Result<Rgb<u8>, ParseIntError> {
     u32::from_str_radix(s, 16).map(rgb_u32)
 }
 
-fn view(_app: &App, model: &Model, frame: nannou::Frame) {
-    model.frame_capturer.draw_to_frame(frame);
+fn view(app: &App, model: &Model, frame: nannou::Frame) {
+    {
+        let mut encoder = frame.command_encoder();
+        model
+            .frame_capturer
+            .draw_to_texture(&mut encoder, &model.texture_copy_view);
+    }
+    let scale = {
+        let [w, h] = model.texture_copy.size();
+        let w = w as f32;
+        let h = h as f32;
+        let [win_w, win_h] = frame.texture_size();
+        let win_w = win_w as f32;
+        let win_h = win_h as f32;
+        f32::min(win_w / w, win_h / h)
+    };
+    let draw = app.draw().scale(scale);
+    draw.texture(&model.texture_copy);
+    draw.to_frame(app, &frame).unwrap();
 }
 
 fn exit(app: &App, model: Model) {
