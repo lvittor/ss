@@ -5,8 +5,6 @@ CARGO_HOME := /usr/src/myapp/cargo_home
 WORKDIR := /usr/src/myapp
 DOCKER_IMG := rustlang/rust:nightly-slim
 
-INPUT_FILE_PATH := TP1/data/input.txt
-OUTPUT_FILE_PATH := TP1/data/output.txt
 MODE := RELEASE
 ifeq "$(MODE)" "RELEASE"
 	TARGET_DIR := ./target/release
@@ -36,8 +34,5 @@ build: ## Build all the binaries
 run:
 	$(DOCKER_PREFIX) cargo run $(if $(PACKAGE),--package $(PACKAGE)) $(if $(BIN),--bin $(BIN)) $(BUILD_FLAG) -- $(ARGS)
 
-run-impl: ## Run the implementation binary. Usage: make run-impl [INPUT_FILE_PATH="file/path" | ARGS="--help"]
-	$(TARGET_DIR)/cim-implementation --input $(INPUT_FILE_PATH) $(ARGS)
-
-run-viz: ## Run the visualization binary. Usage: make run-viz [INPUT_FILE_PATH="file/path" | OUTPUT_FILE_PATH="file/path"]
-	$(TARGET_DIR)/visualization --input $(INPUT_FILE_PATH) --output $(OUTPUT_FILE_PATH)
+run-raw:
+	$(TARGET_DIR)/$(BIN) $(ARGS)
