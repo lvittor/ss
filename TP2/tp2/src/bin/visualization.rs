@@ -2,7 +2,7 @@
 
 use chumsky::Parser;
 use clap::Parser as _parser;
-use frame_capturer::FrameCapturer;
+use frame_capturer::{CaptureMode, FrameCapturer};
 use nalgebra::{Rotation2, Vector2};
 use nannou::{
     color::rgb_u32,
@@ -12,7 +12,7 @@ use std::{
     fs::{read_to_string, File},
     io::{BufRead, BufReader},
     num::ParseIntError,
-    path::Path,
+    path::PathBuf,
 };
 use tp2::{
     parser::{input_parser, output_parser},
@@ -27,6 +27,9 @@ struct Args {
 
     #[arg(short, long)]
     output: String,
+
+    #[arg(long)]
+    capture_directory: Option<PathBuf>,
 }
 
 fn main() {
@@ -82,9 +85,9 @@ fn model(app: &App) -> Model {
         frame_capturer: FrameCapturer::new(
             &app.window(window).unwrap(),
             texture_size,
-            frame_capturer::CaptureMode::Capture {
-                directory: Path::new("./captures").to_owned(),
-            },
+            args.capture_directory
+                .map(|directory| CaptureMode::Capture { directory })
+                .unwrap_or(CaptureMode::NoCapture),
         ),
     }
 }
