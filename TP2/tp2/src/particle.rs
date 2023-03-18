@@ -30,6 +30,7 @@ pub struct InputData {
     pub space_length: f64,
     pub interaction_radius: f64,
     pub noise: f64,
+    pub speed: f64,
     pub particles: Vec<Particle>,
 }
 

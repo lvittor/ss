@@ -4,7 +4,7 @@ use crate::particle::{Frame, InputData, Particle};
 use chumsky::{prelude::*, text::newline};
 use cim::particles::ID;
 use itertools::Itertools;
-use nalgebra::Vector2;
+use nalgebra::{Rotation2, Vector2};
 
 pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich<'a, char>>> {
     let digits = text::digits(10);
@@ -20,11 +20,11 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
 
     let particle_data = unsigned
         .then_ignore(just(' '))
-        .then(num.separated_by_exactly::<_, _, 4>(just(' ')))
-        .map(|(id, [x, y, vx, vy])| Particle {
+        .then(num.separated_by_exactly::<_, _, 3>(just(' ')))
+        .map(|(id, [x, y, a])| Particle {
             id,
             position: Vector2::new(x, y),
-            velocity: Vector2::new(vx, vy),
+            velocity: Rotation2::new(a).transform_vector(&Vector2::x()),
         });
 
     let particles = particle_data
@@ -41,16 +41,30 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
         .then(num)
         .then_ignore(newline())
         .then(num)
-        .map(|((((seed, n), l), r_c), noise)| (seed, n, l, r_c, noise))
+        .then_ignore(newline())
+        .then(num)
+        .map(|(((((seed, n), l), r_c), noise), speed)| (seed, n, l, r_c, noise, speed))
         .then_ignore(newline())
         .then(particles)
         .map(
-            |((rng_seed, _, space_length, interaction_radius, noise), particles)| InputData {
-                rng_seed,
-                space_length,
-                interaction_radius,
-                particles,
-                noise,
+            |((rng_seed, _, space_length, interaction_radius, noise, speed), particles): (
+                _,
+                Vec<Particle>,
+            )| {
+                InputData {
+                    rng_seed,
+                    space_length,
+                    interaction_radius,
+                    noise,
+                    speed,
+                    particles: particles
+                        .into_iter()
+                        .map(|mut p| {
+                            p.velocity *= speed;
+                            p
+                        })
+                        .collect_vec(),
+                }
             },
         )
         .then_ignore(end())
