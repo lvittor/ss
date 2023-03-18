@@ -2,11 +2,15 @@
 
 use chumsky::Parser;
 use clap::Parser as _parser;
-use nannou::prelude::*;
-use nalgebra::Vector2;
+use nalgebra::{Vector2, Rotation2};
+use nannou::{
+    color::rgb_u32,
+    prelude::{Rgb, *},
+};
 use std::{
     fs::{read_to_string, File},
     io::{BufRead, BufReader},
+    num::ParseIntError,
 };
 use tp2::{
     parser::{input_parser, output_parser},
@@ -80,16 +84,28 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
     }
 }
 
+fn parse_hex_color(s: &str) -> Result<Rgb<u8>, ParseIntError> {
+    u32::from_str_radix(s, 16).map(rgb_u32)
+}
+
 fn view(app: &App, model: &Model, frame: nannou::Frame) {
+    let colors = ["d03e2d", "e97c54", "ee9262", "e6bca5", "f4e0d8"]
+        .map(parse_hex_color)
+        .map(|c| Rgba::<f32>::from(c.unwrap().into_format()))
+        .map(|mut c| {
+            c.alpha = 0.3;
+            c
+        });
     let draw = app.draw().transform(model.space_to_window);
-    draw.background().color(BLACK);
-    for particle in &model.frame.particles {
+    draw.background().color(parse_hex_color("213437").unwrap());
+    for (i, particle) in model.frame.particles.iter().enumerate() {
+        let angle = Rotation2::rotation_between(&Vector2::x(), &particle.velocity_direction).angle();
         draw.polygon()
             .points([vec2(-0.1, -0.1), vec2(-0.1, 0.1), vec2(0.15, 0.0)])
             .x(particle.position.x as f32)
             .y(particle.position.y as f32)
-            .color(srgba(1.0, 1.0, 1.0, 0.7))
-            .rotate(particle.velocity_direction.angle(&Vector2::x()) as f32)
+            .rotate(angle as f32)
+            .color(colors[i % colors.len()]);
     }
     draw.to_frame(app, &frame).unwrap();
 }
