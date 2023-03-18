@@ -1,4 +1,4 @@
-use std::fmt::{Display};
+use std::fmt::Display;
 
 use cim::particles::{CircularParticle, ID};
 use nalgebra::Vector2;

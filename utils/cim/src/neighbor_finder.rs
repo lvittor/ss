@@ -1,5 +1,5 @@
 use std::{
-    collections::{BTreeSet, BTreeMap},
+    collections::{BTreeMap, BTreeSet},
     fmt::{Display, Write},
     hash::Hash,
     iter,

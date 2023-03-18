@@ -1,7 +1,7 @@
 use std::{
-    collections::{BTreeMap, HashMap},
+    collections::BTreeMap,
     fs::{self, File},
-    io::{stdout, LineWriter, Write},
+    io::{stdout, Write},
     iter,
 };
 
@@ -67,7 +67,8 @@ fn run<W: Write>(config: InputData, mut output_writer: W) {
                     config.noise / 2.0,
                 ));
 
-            let new_velocity = Rotation2::new(angle).transform_vector(&Vector2::new(config.speed, 0.0));
+            let new_velocity =
+                Rotation2::new(angle).transform_vector(&Vector2::new(config.speed, 0.0));
 
             new_state.insert(
                 id,
