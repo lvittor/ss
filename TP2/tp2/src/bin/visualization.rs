@@ -49,7 +49,8 @@ struct Model {
 }
 
 fn model(app: &App) -> Model {
-    let texture_size = [1000, 1000];
+    let texture_side = 1000;
+    let texture_size = [texture_side, texture_side];
 
     let args = Args::parse();
     let input = read_to_string(args.input).unwrap();
@@ -66,12 +67,12 @@ fn model(app: &App) -> Model {
 
     let space_to_texture = Mat4::from_scale(vec3(1.0, -1.0, 1.0))
         * Mat4::from_translation(vec3(
-            -(texture_size[0] as f32) / 2.0,
-            -(texture_size[1] as f32) / 2.0,
+            -(texture_side as f32) / 2.0,
+            -(texture_side as f32) / 2.0,
             0.0,
         ))
         * Mat4::from_scale({
-            let scale = texture_size[0] as f32 / system_info.space_length as f32;
+            let scale = texture_side as f32 / system_info.space_length as f32;
             Vec3::new(scale, scale, scale)
         });
 
