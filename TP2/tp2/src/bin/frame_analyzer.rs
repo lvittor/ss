@@ -7,7 +7,10 @@ use std::{
 use chumsky::Parser;
 use clap::Parser as _parser;
 use nalgebra::Vector2;
-use tp2::parser::{input_parser, output_parser};
+use tp2::{
+    parser::{input_parser, output_parser},
+    particle::Frame,
+};
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -40,14 +43,14 @@ fn main() {
         system_info.particles.len(),
         BufReader::new(output_file).lines(),
     ) {
-        let va = frame
-            .particles
+        let Frame { time, particles } = frame;
+        let va = particles
             .iter()
             .map(|p| p.velocity_direction)
             .sum::<Vector2<f64>>()
             .magnitude()
-            / frame.particles.len() as f64;
+            / particles.len() as f64;
 
-        analysis_file.write_fmt(format_args!("{va}\n")).unwrap();
+        analysis_file.write_fmt(format_args!("{time},{va}\n")).unwrap();
     }
 }
