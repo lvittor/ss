@@ -22,12 +22,13 @@ def run_multiple_times(times: int):
 
 @run_multiple_times(times=1)
 def run_simulation(input_data: str):
-    simulation_process = subprocess.Popen(["make", "run-raw", "BIN=simulation", "USE_DOCKER=FALSE",
+    simulation_process = subprocess.Popen(["make", "-s", "run-raw", "BIN=simulation", "USE_DOCKER=FALSE",
                                            f'RUN_ARGS=-i /dev/stdin -o /dev/stdout --max-duration 10'], stdout=subprocess.PIPE, stdin=subprocess.PIPE, text=True)
 
     simulation_process.stdin.write(input_data)
+    simulation_process.stdin.close()
 
-    analyzer_process = subprocess.Popen(["make", "run-raw", "BIN=frame_analyzer", "USE_DOCKER=FALSE",
+    analyzer_process = subprocess.Popen(["make", "-s", "run-raw", "BIN=frame_analyzer", "USE_DOCKER=FALSE",
                                         f'RUN_ARGS=-i /dev/stdin -o /dev/fd/{simulation_process.stdout.fileno()} -a /dev/stdout'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, pass_fds=(simulation_process.stdout.fileno(),))
 
     analysis, _ = analyzer_process.communicate(input_data)
