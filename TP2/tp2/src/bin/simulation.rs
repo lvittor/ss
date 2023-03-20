@@ -1,3 +1,5 @@
+#![feature(is_some_and)]
+
 use std::{
     collections::BTreeMap,
     fs::{self, File},
@@ -6,7 +8,7 @@ use std::{
 };
 
 use chumsky::Parser;
-use cim::{cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder};
+use cim::{cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder, particles::ID};
 use itertools::Itertools;
 use nalgebra::{Rotation2, Vector2};
 use rand::{distributions::Uniform, rngs::StdRng, Rng, SeedableRng};
@@ -25,9 +27,16 @@ struct Args {
 
     #[arg(short, long)]
     output: Option<String>,
+
+    #[arg(short, long)]
+    max_duration: Option<f64>,
 }
 
-fn run<W: Write>(config: InputData, mut output_writer: W) {
+fn run<W: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
+    config: InputData,
+    mut output_writer: W,
+    mut stop_condition: F,
+) {
     let dt = 1.0;
     let mut time = 0.0;
     let mut state: BTreeMap<_, _> = config.particles.into_iter().map(|p| (p.id, p)).collect();
@@ -37,7 +46,7 @@ fn run<W: Write>(config: InputData, mut output_writer: W) {
         StdRng::from_entropy()
     };
 
-    loop {
+    while !stop_condition(&state, time) {
         let m = (config.space_length / config.interaction_radius).floor() as usize;
         let neighbors = CimNeighborFinder::find_neighbors(
             &state.values().cloned().collect_vec(),
@@ -67,8 +76,7 @@ fn run<W: Write>(config: InputData, mut output_writer: W) {
                     config.noise / 2.0,
                 ));
 
-            let new_velocity =
-                Rotation2::new(angle).transform_vector(&Vector2::x());
+            let new_velocity = Rotation2::new(angle).transform_vector(&Vector2::x());
 
             new_state.insert(
                 id,
@@ -105,5 +113,5 @@ fn main() {
         Box::new(stdout())
     };
 
-    run(input, writer);
+    run(input, writer, |_state, t| args.max_duration.is_some_and(|max_duration| t > max_duration));
 }
