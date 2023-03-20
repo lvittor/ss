@@ -43,7 +43,7 @@ struct Model {
     frame: Frame,
     space_to_texture: Mat4,
     frame_capturer: FrameCapturer,
-    _window: window::Id,
+    window: window::Id,
     texture_copy: wgpu::Texture,
     texture_copy_view: wgpu::TextureView,
 }
@@ -88,7 +88,7 @@ fn model(app: &App) -> Model {
     let texture_copy_view = texture_copy.to_texture_view();
 
     Model {
-        _window: window,
+        window,
         frame: Frame {
             time: -1.0,
             particles: vec![],
@@ -136,7 +136,9 @@ fn update(app: &App, model: &mut Model, _update: Update) {
                 .color(colors[i % colors.len()]);
         }
 
-        model.frame_capturer.render_to_texture(&app.main_window());
+        model
+            .frame_capturer
+            .render_to_texture(&app.window(model.window).unwrap());
     }
 }
 
@@ -160,7 +162,9 @@ fn view(app: &App, model: &Model, frame: nannou::Frame) {
         let win_h = win_h as f32;
         f32::min(win_w / w, win_h / h)
     };
-    let draw = app.draw().scale(scale);
+    let draw = app
+        .draw()
+        .scale(scale / app.window(model.window).unwrap().scale_factor());
     draw.texture(&model.texture_copy);
     draw.to_frame(app, &frame).unwrap();
 }
