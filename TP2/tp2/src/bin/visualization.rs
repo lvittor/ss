@@ -116,16 +116,17 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         let draw = model.frame_capturer.get_draw();
         draw.reset();
 
-        let colors = ["d03e2d", "e97c54", "ee9262", "e6bca5", "f4e0d8"]
-            .map(parse_hex_color)
-            .map(|c| Rgba::<f32>::from(c.unwrap().into_format()))
-            .map(|mut c| {
-                c.alpha = 0.3;
-                c
-            });
+        //let colors = ["d03e2d", "e97c54", "ee9262", "e6bca5", "f4e0d8"]
+        //.map(parse_hex_color)
+        //.map(|c| Rgba::<f32>::from(c.unwrap().into_format()))
+        //.map(|mut c| {
+        //c.alpha = 0.3;
+        //c.into_linear()
+        //});
+        //let gradient = Gradient::new(colors);
         let draw = &draw.transform(model.space_to_texture);
         draw.background().color(parse_hex_color("213437").unwrap());
-        for (i, particle) in model.frame.particles.iter().enumerate() {
+        for (_i, particle) in model.frame.particles.iter().enumerate() {
             let angle =
                 Rotation2::rotation_between(&Vector2::x(), &particle.velocity_direction).angle();
             draw.polygon()
@@ -133,7 +134,9 @@ fn update(app: &App, model: &mut Model, _update: Update) {
                 .x(particle.position.x as f32)
                 .y(particle.position.y as f32)
                 .rotate(angle as f32)
-                .color(colors[i % colors.len()]);
+                //.color(colors[_i % colors.len()]);
+                //.color(gradient.get(angle.rem_euclid(TAU_F64) as f32 / TAU));
+                .color(hsva(angle.rem_euclid(TAU_F64) as f32 / TAU, 1.0, 1.0, 0.4));
         }
 
         model
