@@ -13,7 +13,7 @@ cim = { path = "utils/cim" }
 frame_capturer = { path = "utils/frame_capturer" }
 clap = { version = "4.1.8", features = ["derive"] }
 itertools = "0.10.5"
-nannou = "0.18.1"
+nannou = { git = "https://github.com/nannou-org/nannou.git" }
 ndarray = "0.15.6"
 rand = "0.8.5"
 glam = "0.23.0"
