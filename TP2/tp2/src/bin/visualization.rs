@@ -129,11 +129,13 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         for (_i, particle) in model.frame.particles.iter().enumerate() {
             let angle =
                 Rotation2::rotation_between(&Vector2::x(), &particle.velocity_direction).angle();
-            draw.polygon()
-                .points([vec2(-0.1, -0.1), vec2(-0.1, 0.1), vec2(0.15, 0.0)])
-                .x(particle.position.x as f32)
-                .y(particle.position.y as f32)
-                .rotate(angle as f32)
+            let tgt = particle.position + particle.velocity_direction * 0.25;
+            draw.arrow()
+                .weight(0.025)
+                .points(
+                    vec2(particle.position.x as f32, particle.position.y as f32),
+                    vec2(tgt.x as f32, tgt.y as f32),
+                )
                 //.color(colors[_i % colors.len()]);
                 //.color(gradient.get(angle.rem_euclid(TAU_F64) as f32 / TAU));
                 .color(hsva(angle.rem_euclid(TAU_F64) as f32 / TAU, 1.0, 1.0, 0.4));
