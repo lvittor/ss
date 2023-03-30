@@ -58,11 +58,11 @@ def run():
 
     for N in [400]:
         for noise in [0, 0.1, 0.2, 0.5, 0.75, 1]:
+            print(f"N={N}, noise={noise}")
             data = run_simulation(lambda :generate(N, L, Rc, noise, speed, None))
             data['N'] = N
             data['noise'] = noise
             df = pd.concat([df, data], ignore_index = False)
-            print(f"N={N}, noise={noise}")
 
     df.to_pickle("data/simulation_runs.pkl")
     print(df)
