@@ -22,7 +22,7 @@ def run_multiple_times(times: int):
     return decorator
 
 
-@run_multiple_times(times=10)
+@run_multiple_times(times=3)
 def run_simulation(input_data: str):
     simulation_process = subprocess.Popen(["make", "-s", "run-raw", "BIN=simulation", "USE_DOCKER=FALSE",
                                            f'RUN_ARGS=-i /dev/stdin -o /dev/stdout --max-duration 1000'], stdout=subprocess.PIPE, stdin=subprocess.PIPE, text=True)
@@ -56,8 +56,13 @@ def run():
         'va': pd.Series(dtype=float),
     })
 
-    for N in [400]:
-        for noise in [0, 0.1, 0.2, 0.5, 0.75, 1]:
+    for N in [40, 100, 400, 4000, 10000]:
+        for noise in [0, 1, 2, 3, 4, 5]:
+            if N == 40: L = 3
+            if N == 100: L = 5
+            if N == 400: L = 10
+            if N == 4000: L = 32
+            if N == 10000: L = 50
             print(f"N={N}, noise={noise}")
             data = run_simulation(lambda :generate(N, L, Rc, noise, speed, None))
             data['N'] = N
