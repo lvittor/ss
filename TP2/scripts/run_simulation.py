@@ -44,7 +44,7 @@ def run_simulation(input_data: str):
 
 
 def run():
-    L = 7
+    L = 20
     Rc = 0.5
     speed = 0.03
 
@@ -57,19 +57,14 @@ def run():
     })
 
     for N in [40, 100, 400, 4000, 10000]:
-        for noise in [0, 1, 2, 3, 4, 5]:
-            if N == 40: L = 3
-            if N == 100: L = 5
-            if N == 400: L = 10
-            if N == 4000: L = 32
-            if N == 10000: L = 50
+        for noise in [1]:
             print(f"N={N}, noise={noise}")
             data = run_simulation(lambda :generate(N, L, Rc, noise, speed, None))
             data['N'] = N
             data['noise'] = noise
             df = pd.concat([df, data], ignore_index = False)
 
-    df.to_pickle("data/simulation_runs.pkl")
+    df.to_pickle("data/simulation_runs_b.pkl")
     print(df)
 
 if __name__ == "__main__":
