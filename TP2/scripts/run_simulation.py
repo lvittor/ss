@@ -56,7 +56,7 @@ def run():
         'va': pd.Series(dtype=float),
     })
 
-    for N in [40, 100, 400, 4000, 10000]:
+    for N in [40, 100, 400, 1000]:
         for noise in [1]:
             print(f"N={N}, noise={noise}")
             data = run_simulation(lambda :generate(N, L, Rc, noise, speed, None))
