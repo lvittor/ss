@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "TP1/tp1",
     "TP2/tp2",
+    "TP3/tp3",
     "utils/*",
 ]
 [workspace.dependencies]

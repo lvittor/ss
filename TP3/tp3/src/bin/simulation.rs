@@ -10,7 +10,7 @@ use cim::{cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder, partic
 use itertools::Itertools;
 use nalgebra::{Rotation2, Vector2};
 use rand::{distributions::Uniform, rngs::StdRng, Rng, SeedableRng};
-use tp2::{
+use tp3::{
     parser::input_parser,
     particle::{Frame, InputData, Particle},
 };

@@ -2383,6 +2383,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "tp3"
+version = "0.1.0"
+dependencies = [
+ "chumsky",
+ "cim",
+ "clap",
+ "frame_capturer",
+ "itertools",
+ "nalgebra",
+ "nannou",
+ "rand 0.8.5",
+ "utf8-chars",
+]
+
+[[package]]
 name = "typenum"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

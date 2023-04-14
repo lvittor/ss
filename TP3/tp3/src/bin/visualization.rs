@@ -13,7 +13,7 @@ use std::{
     num::ParseIntError,
     path::PathBuf,
 };
-use tp2::{
+use tp3::{
     parser::{input_parser, output_parser},
     particle::{Frame, InputData},
 };
