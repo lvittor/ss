@@ -49,7 +49,7 @@ struct Model {
 }
 
 fn model(app: &App) -> Model {
-    let texture_side = 1000;
+    let texture_side = 1080;
     let texture_size = [texture_side, texture_side];
 
     let args = Args::parse();
