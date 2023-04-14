@@ -12,7 +12,7 @@ use nalgebra::{Rotation2, Vector2};
 use rand::{distributions::Uniform, rngs::StdRng, Rng, SeedableRng};
 use tp3::{
     parser::input_parser,
-    particle::{Frame, InputData, Particle},
+    particle::{Frame, InputData, Ball},
 };
 
 use clap::Parser as _parser;
@@ -30,7 +30,7 @@ struct Args {
     max_duration: Option<f64>,
 }
 
-fn run<W: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
+fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, f64) -> bool>(
     config: InputData,
     mut output_writer: W,
     mut stop_condition: F,
@@ -75,7 +75,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
 
             new_state.insert(
                 id,
-                Particle {
+                Ball {
                     id,
                     position: (particle.position + particle.velocity_direction * config.speed * dt)
                         .apply_into(|f| *f = f.rem_euclid(config.space_length)),
