@@ -60,17 +60,14 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
 
         let mut new_state = BTreeMap::new();
         for (&id, particle) in &state {
-            let mut cos_sum = 0.0;
-            let mut sin_sum = 0.0;
-            for neighbor in neighbors
+            let sums = neighbors
                 .get_neighbors(id)
                 .chain(iter::once(&id))
                 .map(|i| state[i])
-            {
-                cos_sum += neighbor.velocity_direction.x;
-                sin_sum += neighbor.velocity_direction.y;
-            }
-            let angle = f64::atan2(sin_sum, cos_sum)
+                .map(|n| n.velocity_direction)
+                .sum::<Vector2<_>>();
+
+            let angle = f64::atan2(sums.y, sums.x)
                 + rng.sample(Uniform::new_inclusive(
                     -config.noise / 2.0,
                     config.noise / 2.0,
