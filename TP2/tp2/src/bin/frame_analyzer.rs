@@ -51,6 +51,8 @@ fn main() {
             .magnitude()
             / particles.len() as f64;
 
-        analysis_file.write_fmt(format_args!("{time},{va}\n")).unwrap();
+        analysis_file
+            .write_fmt(format_args!("{time},{va}\n"))
+            .unwrap();
     }
 }

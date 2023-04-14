@@ -110,5 +110,8 @@ fn main() {
         Box::new(stdout())
     };
 
-    run(input, writer, |_state, t| args.max_duration.is_some_and(|max_duration| t > max_duration));
+    run(input, writer, |_state, t| {
+        args.max_duration
+            .is_some_and(|max_duration| t > max_duration)
+    });
 }
