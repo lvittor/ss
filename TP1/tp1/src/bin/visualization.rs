@@ -1,5 +1,3 @@
-#![feature(is_some_and)]
-
 use chumsky::Parser;
 use cim::{neighbor_finder::NeighborMap, particles::ID};
 use clap::Parser as _parser;

@@ -1,5 +1,3 @@
-#![feature(is_some_and)]
-
 use chumsky::Parser;
 use clap::Parser as _parser;
 use frame_capturer::{CaptureMode, FrameCapturer};

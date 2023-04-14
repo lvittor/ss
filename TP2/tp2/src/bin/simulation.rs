@@ -1,5 +1,3 @@
-#![feature(is_some_and)]
-
 use std::{
     collections::BTreeMap,
     fs::{self, File},
