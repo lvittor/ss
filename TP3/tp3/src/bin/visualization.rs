@@ -1,6 +1,7 @@
 use chumsky::Parser;
 use clap::Parser as _parser;
 use frame_capturer::{CaptureMode, FrameCapturer};
+use nalgebra::Vector2;
 use nannou::{
     color::rgb_u32,
     prelude::{Rgb, *},
@@ -35,9 +36,10 @@ fn main() {
 }
 
 struct Model {
-    _system_info: InputData,
+    system_info: InputData,
     frame_iter: Box<dyn Iterator<Item = Frame>>,
     frame: Frame,
+    holes: Vec<Vector2<f64>>,
     space_to_texture: Mat4,
     frame_capturer: FrameCapturer,
     window: window::Id,
@@ -80,6 +82,25 @@ fn model(app: &App) -> Model {
 
     let texture_copy_view = texture_copy.to_texture_view();
 
+    let holes = Vec::from(
+        [
+            Vector2::new(0.0, 0.0),
+            Vector2::new(1.0, 0.0),
+            Vector2::new(0.0, 1.0),
+            Vector2::new(1.0, 1.0),
+            Vector2::new(0.5, 0.0),
+            Vector2::new(0.5, 1.0),
+        ]
+        .map(|v| {
+            v.component_mul(&Vector2::new(
+                system_info.table_width,
+                system_info.table_height,
+            ))
+        }),
+    );
+
+    dbg!(&holes);
+
     Model {
         window,
         frame: Frame {
@@ -87,7 +108,8 @@ fn model(app: &App) -> Model {
             balls: vec![],
         },
         frame_iter,
-        _system_info: system_info,
+        holes,
+        system_info,
         space_to_texture,
         frame_capturer: FrameCapturer::new(
             &app.window(window).unwrap(),
@@ -116,7 +138,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
             //Rotation2::rotation_between(&Vector2::x(), &particle.velocity).angle();
             //let tgt = particle.position + particle.velocity * 0.25;
             draw.ellipse()
-                .radius(model._system_info.ball_radius as f32)
+                .radius(model.system_info.ball_radius as f32)
                 .stroke_weight(1.0)
                 .x(particle.position.x as f32)
                 .y(particle.position.y as f32)
@@ -124,7 +146,19 @@ fn update(app: &App, model: &mut Model, _update: Update) {
                     WHITE
                 } else {
                     Rgb::from(hsv((particle.id as f32 - 1.0) / 15.0, 1.0, 1.0)).into_format()
-                });
+                })
+                .finish();
+        }
+
+        for hole in &model.holes {
+            draw.ellipse()
+                .radius(model.system_info.hole_radius as f32)
+                .x(hole.x as f32)
+                .y(hole.y as f32)
+                .no_fill()
+                .stroke_weight(1.0)
+                .stroke(GRAY)
+                .finish();
         }
 
         model
