@@ -110,28 +110,30 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         let draw = model.frame_capturer.get_draw();
         draw.reset();
 
-        //let colors = ["d03e2d", "e97c54", "ee9262", "e6bca5", "f4e0d8"]
-        //.map(parse_hex_color)
-        //.map(|c| Rgba::<f32>::from(c.unwrap().into_format()))
-        //.map(|mut c| {
-        //c.alpha = 0.3;
-        //c.into_linear()
-        //});
+        let colors = [
+            "ff355e", "fd5b78", "ff6037", "ff9966", "ff9966", "ffcc33", "ffff66", "ccff00",
+            "66ff66", "aaf0d1", "16d0cb", "50bfe6", "9c27b0", "ee34d2", "ff00cc",
+        ]
+        .map(parse_hex_color)
+        .map(|c| c.unwrap());
         //let gradient = Gradient::new(colors);
         let draw = &draw.transform(model.space_to_texture);
         draw.background().color(parse_hex_color("213437").unwrap());
-        for (_i, particle) in model.frame.balls.iter().enumerate() {
+        for (i, particle) in model.frame.balls.iter().enumerate() {
             //let angle =
-                //Rotation2::rotation_between(&Vector2::x(), &particle.velocity).angle();
+            //Rotation2::rotation_between(&Vector2::x(), &particle.velocity).angle();
             //let tgt = particle.position + particle.velocity * 0.25;
             draw.ellipse()
                 .radius(model._system_info.ball_radius as f32)
                 .stroke_weight(1.0)
                 .x(particle.position.x as f32)
                 .y(particle.position.y as f32)
-                //.color(colors[_i % colors.len()]);
-                //.color(gradient.get(angle.rem_euclid(TAU_F64) as f32 / TAU));
-                .color(WHITE);
+                .color(if particle.id == 0 {
+                    WHITE
+                } else {
+                    colors[(i - 1) % colors.len()]
+                });
+            //.color(gradient.get(angle.rem_euclid(TAU_F64) as f32 / TAU));
         }
 
         model
