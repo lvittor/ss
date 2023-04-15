@@ -5,6 +5,7 @@ Input data has the following format:
 ```
 W (table x size)
 H (table y size)
+HD (hole diameter)
 D (ball diameter)
 M (mass)
 N (number of balls)

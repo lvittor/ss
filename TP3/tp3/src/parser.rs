@@ -38,17 +38,20 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
         .then_ignore(newline())
         .then(num.map(|v| v / 2.0))
         .then_ignore(newline())
+        .then(num.map(|v| v / 2.0))
+        .then_ignore(newline())
         .then(num)
         .then_ignore(newline())
         .then(unsigned)
-        .map(|((((w, h), r), m), n)| (w, h, d, m, n))
+        .map(|(((((w, h), h_r), r), m), n)| (w, h, h_r, d, m, n))
         .then_ignore(newline())
         .then(balls)
         .map(
-            |((table_width, table_height, ball_radius, ball_mass, _), balls): (_, Vec<Ball>)| {
+            |((table_width, table_height, hole_radius, ball_radius, ball_mass, _), balls): (_, Vec<Ball>)| {
                 InputData {
                     table_width,
                     table_height,
+                    hole_radius,
                     ball_radius,
                     ball_mass,
                     balls,

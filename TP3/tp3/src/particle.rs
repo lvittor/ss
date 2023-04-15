@@ -14,6 +14,7 @@ pub struct Ball {
 pub struct InputData {
     pub table_width: f64,
     pub table_height: f64,
+    pub hole_radius: f64,
     pub ball_radius: f64,
     pub ball_mass: f64,
     pub balls: Vec<Ball>,
