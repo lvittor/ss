@@ -1,6 +1,9 @@
+#![feature(let_chains)]
+
 use chumsky::Parser;
 use clap::Parser as _parser;
 use frame_capturer::{CaptureMode, FrameCapturer};
+use itertools::{Either, Itertools};
 use nalgebra::Vector2;
 use nannou::{
     color::rgb_u32,
@@ -15,7 +18,8 @@ use std::{
 };
 use tp3::{
     parser::{input_parser, output_parser},
-    particle::{Frame, InputData},
+    particle::{Ball, Frame, InputData},
+    HOLE_POSITIONS,
 };
 
 #[derive(clap::Parser, Debug)]
@@ -38,13 +42,15 @@ fn main() {
 struct Model {
     system_info: InputData,
     frame_iter: Box<dyn Iterator<Item = Frame>>,
-    frame: Frame,
+    frame: Option<Frame>,
+    last_frame: Option<Frame>,
     holes: Vec<Vector2<f64>>,
     space_to_texture: Mat4,
     frame_capturer: FrameCapturer,
     window: window::Id,
     texture_copy: wgpu::Texture,
     texture_copy_view: wgpu::TextureView,
+    time: f64,
 }
 
 fn model(app: &App) -> Model {
@@ -82,31 +88,20 @@ fn model(app: &App) -> Model {
 
     let texture_copy_view = texture_copy.to_texture_view();
 
-    let holes = Vec::from(
-        [
-            Vector2::new(0.0, 0.0),
-            Vector2::new(1.0, 0.0),
-            Vector2::new(0.0, 1.0),
-            Vector2::new(1.0, 1.0),
-            Vector2::new(0.5, 0.0),
-            Vector2::new(0.5, 1.0),
-        ]
-        .map(|v| {
-            v.component_mul(&Vector2::new(
-                system_info.table_width,
-                system_info.table_height,
-            ))
-        }),
-    );
+    let holes = Vec::from(HOLE_POSITIONS.map(|v| {
+        v.component_mul(&Vector2::new(
+            system_info.table_width,
+            system_info.table_height,
+        ))
+    }));
 
     dbg!(&holes);
 
     Model {
         window,
-        frame: Frame {
-            time: -1.0,
-            balls: vec![],
-        },
+        frame: None,
+        last_frame: None,
+        time: 0.0,
         frame_iter,
         holes,
         system_info,
@@ -124,16 +119,23 @@ fn model(app: &App) -> Model {
     }
 }
 
-fn update(app: &App, model: &mut Model, _update: Update) {
-    if let Some(frame) = model.frame_iter.next() {
-        model.frame = frame;
-
+fn update(app: &App, model: &mut Model, update: Update) {
+    if let Some(frame) = &model.frame && model.time < frame.time {
         let draw = model.frame_capturer.get_draw();
         draw.reset();
 
         let draw = &draw.transform(model.space_to_texture);
         draw.background().color(parse_hex_color("213437").unwrap());
-        for (_i, particle) in model.frame.balls.iter().enumerate() {
+        let interpolated_balls = if let Some(last_frame) = &model.last_frame {
+            Either::Left(last_frame.balls.iter().map(|&Ball{id, position, velocity}| Ball{
+                id, 
+                position: position + velocity * (model.time - last_frame.time), 
+                velocity
+            }))
+        } else {
+            Either::Right(frame.balls.iter().cloned())
+        };
+        for particle in interpolated_balls {
             //let angle =
             //Rotation2::rotation_between(&Vector2::x(), &particle.velocity).angle();
             //let tgt = particle.position + particle.velocity * 0.25;
@@ -164,6 +166,11 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         model
             .frame_capturer
             .render_to_texture(&app.window(model.window).unwrap());
+
+        model.time += update.since_last.as_secs_f64();
+    } else if let Some(frame) = model.frame_iter.next() {
+        model.last_frame = model.frame.clone();
+        model.frame = Some(frame);
     }
 }
 
