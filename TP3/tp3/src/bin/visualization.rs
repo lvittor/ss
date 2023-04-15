@@ -95,8 +95,6 @@ fn model(app: &App) -> Model {
         ))
     }));
 
-    dbg!(&holes);
-
     Model {
         window,
         frame: None,
