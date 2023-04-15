@@ -121,18 +121,17 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         let draw = &draw.transform(model.space_to_texture);
         draw.background().color(parse_hex_color("213437").unwrap());
         for (_i, particle) in model.frame.balls.iter().enumerate() {
-            let angle =
-                Rotation2::rotation_between(&Vector2::x(), &particle.velocity).angle();
-            let tgt = particle.position + particle.velocity * 0.25;
-            draw.arrow()
-                .weight(0.025)
-                .points(
-                    vec2(particle.position.x as f32, particle.position.y as f32),
-                    vec2(tgt.x as f32, tgt.y as f32),
-                )
+            //let angle =
+                //Rotation2::rotation_between(&Vector2::x(), &particle.velocity).angle();
+            //let tgt = particle.position + particle.velocity * 0.25;
+            draw.ellipse()
+                .radius(model._system_info.ball_radius as f32)
+                .stroke_weight(1.0)
+                .x(particle.position.x as f32)
+                .y(particle.position.y as f32)
                 //.color(colors[_i % colors.len()]);
                 //.color(gradient.get(angle.rem_euclid(TAU_F64) as f32 / TAU));
-                .color(hsva(angle.rem_euclid(TAU_F64) as f32 / TAU, 1.0, 1.0, 0.4));
+                .color(WHITE);
         }
 
         model
