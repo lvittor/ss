@@ -1,7 +1,6 @@
 use chumsky::Parser;
 use clap::Parser as _parser;
 use frame_capturer::{CaptureMode, FrameCapturer};
-use nalgebra::{Rotation2, Vector2};
 use nannou::{
     color::rgb_u32,
     prelude::{Rgb, *},
@@ -110,16 +109,9 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         let draw = model.frame_capturer.get_draw();
         draw.reset();
 
-        let colors = [
-            "ff355e", "fd5b78", "ff6037", "ff9966", "ff9966", "ffcc33", "ffff66", "ccff00",
-            "66ff66", "aaf0d1", "16d0cb", "50bfe6", "9c27b0", "ee34d2", "ff00cc",
-        ]
-        .map(parse_hex_color)
-        .map(|c| c.unwrap());
-        //let gradient = Gradient::new(colors);
         let draw = &draw.transform(model.space_to_texture);
         draw.background().color(parse_hex_color("213437").unwrap());
-        for (i, particle) in model.frame.balls.iter().enumerate() {
+        for (_i, particle) in model.frame.balls.iter().enumerate() {
             //let angle =
             //Rotation2::rotation_between(&Vector2::x(), &particle.velocity).angle();
             //let tgt = particle.position + particle.velocity * 0.25;
@@ -131,9 +123,8 @@ fn update(app: &App, model: &mut Model, _update: Update) {
                 .color(if particle.id == 0 {
                     WHITE
                 } else {
-                    colors[(i - 1) % colors.len()]
+                    Rgb::from(hsv((particle.id as f32 - 1.0) / 15.0, 1.0, 1.0)).into_format()
                 });
-            //.color(gradient.get(angle.rem_euclid(TAU_F64) as f32 / TAU));
         }
 
         model
