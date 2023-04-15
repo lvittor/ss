@@ -28,7 +28,7 @@ pub struct Frame {
 
 impl Display for Frame {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}\n{}\n", self.time, self.balls.len()))?;
+        f.write_fmt(format_args!("{}\n{}\n", self.balls.len(), self.time))?;
         for particle in &self.balls {
             f.write_fmt(format_args!(
                 "{} {} {} {} {}\n",

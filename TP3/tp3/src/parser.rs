@@ -1,6 +1,4 @@
-use std::{
-    io::{BufRead, Lines},
-};
+use std::io::{BufRead, Lines};
 
 use crate::particle::{Ball, Frame, InputData};
 use chumsky::{prelude::*, text::newline};
@@ -81,8 +79,10 @@ impl<I: Iterator<Item = String>> Iterator for Chunks<I> {
                     return None;
                 }
             }
+            Some(values)
+        } else {
+            None
         }
-        Some(values)
     }
 }
 
@@ -94,30 +94,26 @@ trait CollectedChunks: Iterator + Sized {
 
 impl<I: Iterator> CollectedChunks for I {}
 
-pub fn output_parser<B: BufRead>(
-    file: Lines<B>,
-) -> impl Iterator<Item = Frame> {
-    file.map(Result::unwrap)
-        .collected_chunks()
-        .map(|frame| {
-            let mut frame = frame.into_iter();
-            let time: f64 = frame.next().unwrap().parse().unwrap();
-            let balls = frame
-                .map(|line| {
-                    let mut values = line.split_whitespace();
-                    let id: ID = values.next().unwrap().parse().unwrap();
-                    let [x, y, vx, vy]: [f64; 4] = values
-                        .map(|v| v.parse().unwrap())
-                        .collect_vec()
-                        .try_into()
-                        .unwrap();
-                    Ball {
-                        id,
-                        position: Vector2::new(x, y),
-                        velocity: Vector2::new(vx, vy),
-                    }
-                })
-                .collect_vec();
-            Frame { time, balls }
-        })
+pub fn output_parser<B: BufRead>(file: Lines<B>) -> impl Iterator<Item = Frame> {
+    file.map(Result::unwrap).collected_chunks().map(|frame| {
+        let mut frame = frame.into_iter();
+        let time: f64 = frame.next().unwrap().parse().unwrap();
+        let balls = frame
+            .map(|line| {
+                let mut values = line.split_whitespace();
+                let id: ID = values.next().unwrap().parse().unwrap();
+                let [x, y, vx, vy]: [f64; 4] = values
+                    .map(|v| v.parse().unwrap())
+                    .collect_vec()
+                    .try_into()
+                    .unwrap();
+                Ball {
+                    id,
+                    position: Vector2::new(x, y),
+                    velocity: Vector2::new(vx, vy),
+                }
+            })
+            .collect_vec();
+        Frame { time, balls }
+    })
 }
