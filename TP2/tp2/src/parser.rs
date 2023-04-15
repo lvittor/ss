@@ -130,7 +130,6 @@ pub fn output_parser<B: BufRead>(
     file: Lines<B>,
 ) -> impl Iterator<Item = Frame> {
     file.map(Result::unwrap)
-        .into_iter()
         .collected_chunks(particle_count + 1)
         .map(|frame| {
             let mut frame = frame.into_iter();

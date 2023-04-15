@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use cim::particles::{CircularParticle, ID};
+use cim::particles::ID;
 use nalgebra::Vector2;
 
 #[derive(Debug, Clone, Copy)]
@@ -29,7 +29,7 @@ pub struct Frame {
 impl Display for Frame {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!("{}\n{}\n", self.time, self.balls.len()))?;
-        for particle in &self.particles {
+        for particle in &self.balls {
             f.write_fmt(format_args!(
                 "{} {} {} {} {}\n",
                 particle.id,

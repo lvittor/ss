@@ -1,16 +1,16 @@
-use std::io::{BufRead, Lines};
+use std::{
+    io::{BufRead, Lines},
+};
 
 use crate::particle::{Ball, Frame, InputData};
 use chumsky::{prelude::*, text::newline};
 use cim::particles::ID;
 use itertools::Itertools;
-use nalgebra::{Rotation2, Vector2};
+use nalgebra::Vector2;
 
 pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich<'a, char>>> {
     let digits = text::digits(10);
     let unsigned = digits.map_slice(|s: &str| s.parse::<usize>().unwrap());
-    let unsigned64 = digits.map_slice(|s: &str| s.parse::<u64>().unwrap());
-    let seed = just("any").to(None).or(unsigned64.map(Some));
 
     let num = just('-')
         .or_not()
@@ -43,11 +43,14 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
         .then(num)
         .then_ignore(newline())
         .then(unsigned)
-        .map(|(((((w, h), h_r), r), m), n)| (w, h, h_r, d, m, n))
+        .map(|(((((w, h), h_r), r), m), n)| (w, h, h_r, r, m, n))
         .then_ignore(newline())
         .then(balls)
         .map(
-            |((table_width, table_height, hole_radius, ball_radius, ball_mass, _), balls): (_, Vec<Ball>)| {
+            |((table_width, table_height, hole_radius, ball_radius, ball_mass, _), balls): (
+                _,
+                Vec<Ball>,
+            )| {
                 InputData {
                     table_width,
                     table_height,
@@ -63,19 +66,20 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
 
 struct Chunks<I> {
     inner: I,
-    size: usize,
 }
 
-impl<I: Iterator> Iterator for Chunks<I> {
+impl<I: Iterator<Item = String>> Iterator for Chunks<I> {
     type Item = Vec<I::Item>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut values = vec![];
-        for _ in 0..self.size {
-            if let Some(value) = self.inner.next() {
-                values.push(value);
-            } else {
-                return None;
+        if let Some(count) = self.inner.next().map(|v| v.parse::<usize>().unwrap()) {
+            for _ in 0..count + 1 {
+                if let Some(value) = self.inner.next() {
+                    values.push(value);
+                } else {
+                    return None;
+                }
             }
         }
         Some(values)
@@ -83,24 +87,21 @@ impl<I: Iterator> Iterator for Chunks<I> {
 }
 
 trait CollectedChunks: Iterator + Sized {
-    fn collected_chunks(self, size: usize) -> Chunks<Self> {
-        Chunks { inner: self, size }
+    fn collected_chunks(self) -> Chunks<Self> {
+        Chunks { inner: self }
     }
 }
 
 impl<I: Iterator> CollectedChunks for I {}
 
 pub fn output_parser<B: BufRead>(
-    particle_count: usize,
     file: Lines<B>,
 ) -> impl Iterator<Item = Frame> {
     file.map(Result::unwrap)
-        .into_iter()
-        .collected_chunks(particle_count + 1)
+        .collected_chunks()
         .map(|frame| {
             let mut frame = frame.into_iter();
             let time: f64 = frame.next().unwrap().parse().unwrap();
-            let count: f64 = frame.next().unwrap().parse().unwrap();
             let balls = frame
                 .map(|line| {
                     let mut values = line.split_whitespace();

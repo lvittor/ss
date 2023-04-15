@@ -47,8 +47,7 @@ struct Model {
 }
 
 fn model(app: &App) -> Model {
-    let texture_side = 1080;
-    let texture_size = [texture_side, texture_side];
+    let texture_size = [2160, 1080];
 
     let args = Args::parse();
     let input = read_to_string(args.input).unwrap();
@@ -58,19 +57,16 @@ fn model(app: &App) -> Model {
         .into_result()
         .expect("Error parsing input data.");
 
-    let frame_iter = Box::new(output_parser(
-        system_info.particles.len(),
-        BufReader::new(output_file).lines(),
-    ));
+    let frame_iter = Box::new(output_parser(BufReader::new(output_file).lines()));
 
     let space_to_texture = Mat4::from_scale(vec3(1.0, -1.0, 1.0))
         * Mat4::from_translation(vec3(
-            -(texture_side as f32) / 2.0,
-            -(texture_side as f32) / 2.0,
+            -(texture_size[0] as f32) / 2.0,
+            -(texture_size[1] as f32) / 2.0,
             0.0,
         ))
         * Mat4::from_scale({
-            let scale = texture_side as f32 / system_info.space_length as f32;
+            let scale = texture_size[1] as f32 / system_info.table_height as f32;
             Vec3::new(scale, scale, scale)
         });
 
@@ -89,7 +85,7 @@ fn model(app: &App) -> Model {
         window,
         frame: Frame {
             time: -1.0,
-            particles: vec![],
+            balls: vec![],
         },
         frame_iter,
         _system_info: system_info,
@@ -124,10 +120,10 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         //let gradient = Gradient::new(colors);
         let draw = &draw.transform(model.space_to_texture);
         draw.background().color(parse_hex_color("213437").unwrap());
-        for (_i, particle) in model.frame.particles.iter().enumerate() {
+        for (_i, particle) in model.frame.balls.iter().enumerate() {
             let angle =
-                Rotation2::rotation_between(&Vector2::x(), &particle.velocity_direction).angle();
-            let tgt = particle.position + particle.velocity_direction * 0.25;
+                Rotation2::rotation_between(&Vector2::x(), &particle.velocity).angle();
+            let tgt = particle.position + particle.velocity * 0.25;
             draw.arrow()
                 .weight(0.025)
                 .points(
