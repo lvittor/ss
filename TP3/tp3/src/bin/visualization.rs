@@ -14,7 +14,7 @@ use std::{
     fs::{read_to_string, File},
     io::{BufRead, BufReader},
     num::ParseIntError,
-    path::PathBuf,
+    path::PathBuf, f64::INFINITY,
 };
 use tp3::{
     parser::{input_parser, output_parser},
@@ -134,9 +134,6 @@ fn update(app: &App, model: &mut Model, update: Update) {
             Either::Right(frame.balls.iter().cloned())
         };
         for particle in interpolated_balls {
-            //let angle =
-            //Rotation2::rotation_between(&Vector2::x(), &particle.velocity).angle();
-            //let tgt = particle.position + particle.velocity * 0.25;
             draw.ellipse()
                 .radius(model.system_info.ball_radius as f32)
                 .x(particle.position.x as f32)
@@ -168,6 +165,9 @@ fn update(app: &App, model: &mut Model, update: Update) {
     } else if let Some(frame) = model.frame_iter.next() {
         model.last_frame = model.frame.clone();
         model.frame = Some(frame);
+    } else {
+        model.last_frame = model.frame.clone();
+        model.frame = Some(Frame { time: INFINITY, balls: model.last_frame.as_ref().unwrap().balls.clone() })
     }
 }
 
