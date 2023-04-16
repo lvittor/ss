@@ -139,7 +139,6 @@ fn update(app: &App, model: &mut Model, update: Update) {
             //let tgt = particle.position + particle.velocity * 0.25;
             draw.ellipse()
                 .radius(model.system_info.ball_radius as f32)
-                .stroke_weight(1.0)
                 .x(particle.position.x as f32)
                 .y(particle.position.y as f32)
                 .color(if particle.id == 0 {
