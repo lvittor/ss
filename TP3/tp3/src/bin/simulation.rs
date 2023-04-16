@@ -6,7 +6,6 @@ use std::{
     collections::BTreeMap,
     fs::{self, File},
     io::{stdout, Write},
-    ops::Mul,
 };
 
 use itertools::Itertools;
@@ -62,10 +61,7 @@ fn find_collision_between_balls(b1: &Ball, b2: &Ball, radius_sum: f64) -> Option
         .then(|| -(delta_v.dot(&delta_r) + d.sqrt()) / (delta_v.dot(&delta_v)))
 }
 
-fn find_collision_against_wall(
-    ball: &Ball,
-    config: &InputData,
-) -> Option<(f64, WallType)> {
+fn find_collision_against_wall(ball: &Ball, config: &InputData) -> Option<(f64, WallType)> {
     let radius = config.ball_radius;
 
     let time_x = if ball.velocity.x > 0.0 {
@@ -74,7 +70,8 @@ fn find_collision_against_wall(
         Some((radius - ball.position.x) / ball.velocity.x)
     } else {
         None
-    }.map(|t| (t, WallType::Vertical));
+    }
+    .map(|t| (t, WallType::Vertical));
 
     let time_y = if ball.velocity.y > 0.0 {
         Some((config.table_height - radius - ball.position.y) / ball.velocity.y)
@@ -82,7 +79,8 @@ fn find_collision_against_wall(
         Some((radius - ball.position.y) / ball.velocity.y)
     } else {
         None
-    }.map(|t| (t, WallType::Horizontal));
+    }
+    .map(|t| (t, WallType::Horizontal));
 
     time_x
         .into_iter()
@@ -154,7 +152,9 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, f64) -> bool>(
     }
 
     while !stop_condition(&state, time) {
-        if let Some(collision) = find_earliest_collision(&state.values().collect_vec(), &holes, &config) {
+        if let Some(collision) =
+            find_earliest_collision(&state.values().collect_vec(), &holes, &config)
+        {
             // Forward until earliest collision
             for ball in state.values_mut() {
                 ball.position += ball.velocity * collision.time;
@@ -165,12 +165,11 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, f64) -> bool>(
             // Apply collisions
             match collision.info {
                 CollisionAgainst::Ball(id1, id2) => {
-
                     let delta_v = state[&id2].velocity - state[&id1].velocity;
                     let delta_r = state[&id2].position - state[&id1].position;
                     let sigma = config.ball_radius * 2.0;
 
-                    let j = (2.0 * config.ball_mass.powi(2)*(delta_v.dot(&delta_r)))
+                    let j = (2.0 * config.ball_mass.powi(2) * (delta_v.dot(&delta_r)))
                         / (sigma * (config.ball_mass * 2.0));
                     let j_vec = delta_r * j / sigma;
 
@@ -187,7 +186,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, f64) -> bool>(
                     state.remove(&id);
                 }
             }
-            
+
             // Write to output
             let frame = Frame {
                 time,
