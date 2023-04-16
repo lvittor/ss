@@ -16,7 +16,7 @@ def generate(table_width: float, table_height: float, hole_diameter: float, ball
         out += f"{ball_id} {x} {y} {vx} {vy}\n"
         ball_id += 1
 
-    add_ball(table_width / 4, table_height / 2, 2, 0)
+    add_ball(table_width / 4, table_height / 2, 200, 0)
 
     ball_separation = ball_diameter * 1.1
     triangle_height = math.sqrt(ball_separation ** 2 - (ball_separation / 2) ** 2)
