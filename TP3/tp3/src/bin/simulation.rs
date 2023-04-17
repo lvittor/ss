@@ -131,6 +131,32 @@ fn find_earliest_collision(
     earliest
 }
 
+fn apply_collision(state: &mut BTreeMap<ID, Ball>, config: &InputData, collision: Collision) {
+    match collision.info {
+        CollisionAgainst::Ball(id1, id2) => {
+            let delta_v = state[&id2].velocity - state[&id1].velocity;
+            let delta_r = state[&id2].position - state[&id1].position;
+            let sigma = config.ball_radius * 2.0;
+
+            let j = (2.0 * config.ball_mass.powi(2) * (delta_v.dot(&delta_r)))
+                / (sigma * (config.ball_mass * 2.0));
+            let j_vec = delta_r * j / sigma;
+
+            let ball_1 = state.get_mut(&id1).unwrap();
+            ball_1.velocity += j_vec / config.ball_mass;
+            let ball_2 = state.get_mut(&id2).unwrap();
+            ball_2.velocity -= j_vec / config.ball_mass;
+        }
+        CollisionAgainst::Wall(id, wall_type) => match wall_type {
+            WallType::Horizontal => state.get_mut(&id).unwrap().velocity.y *= -1.0,
+            WallType::Vertical => state.get_mut(&id).unwrap().velocity.x *= -1.0,
+        },
+        CollisionAgainst::Hole(id) => {
+            state.remove(&id);
+        }
+    }
+}
+
 fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, f64) -> bool>(
     config: InputData,
     mut output_writer: W,
@@ -162,30 +188,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, f64) -> bool>(
 
             time += collision.time;
 
-            // Apply collisions
-            match collision.info {
-                CollisionAgainst::Ball(id1, id2) => {
-                    let delta_v = state[&id2].velocity - state[&id1].velocity;
-                    let delta_r = state[&id2].position - state[&id1].position;
-                    let sigma = config.ball_radius * 2.0;
-
-                    let j = (2.0 * config.ball_mass.powi(2) * (delta_v.dot(&delta_r)))
-                        / (sigma * (config.ball_mass * 2.0));
-                    let j_vec = delta_r * j / sigma;
-
-                    let ball_1 = state.get_mut(&id1).unwrap();
-                    ball_1.velocity += j_vec / config.ball_mass;
-                    let ball_2 = state.get_mut(&id2).unwrap();
-                    ball_2.velocity -= j_vec / config.ball_mass;
-                }
-                CollisionAgainst::Wall(id, wall_type) => match wall_type {
-                    WallType::Horizontal => state.get_mut(&id).unwrap().velocity.y *= -1.0,
-                    WallType::Vertical => state.get_mut(&id).unwrap().velocity.x *= -1.0,
-                },
-                CollisionAgainst::Hole(id) => {
-                    state.remove(&id);
-                }
-            }
+            apply_collision(&mut state, &config, collision);
 
             // Write to output
             let frame = Frame {
