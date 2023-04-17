@@ -3,6 +3,16 @@ from typing import Optional
 import math
 
 
+def rand_inside_circle(radius: float):
+    r = radius * math.sqrt(random.random())
+    theta = random.random() * 2 * math.pi
+
+    x = r * math.cos(theta)
+    y = r * math.sin(theta)
+
+    return x, y
+
+
 def generate(table_width: float, table_height: float, min_white_y: float, hole_diameter: float, ball_diameter: float, ball_mass: float, balls_noise: float = 0, seed: Optional[int] = None) -> str:
     if seed is not None:
         random.seed(seed)
@@ -20,16 +30,22 @@ def generate(table_width: float, table_height: float, min_white_y: float, hole_d
     white_y = random.uniform(min_white_y, table_height / 2)
     add_ball(table_width / 4, white_y, 200, 0)
 
-    ball_separation = ball_diameter * 1.1
+    min_separation = 0.02
+    max_separation = 0.03
+
+    initial_separation = ball_diameter + max_separation / 2 + min_separation / 2
+    max_random_module = (max_separation - min_separation) / 4
+
     triangle_height = math.sqrt(
-        ball_separation ** 2 - (ball_separation / 2) ** 2)
+        initial_separation ** 2 - (initial_separation / 2) ** 2)
 
     for rank in range(5):
         x = table_width * 3 / 4 + rank * triangle_height
         for i in range(rank + 1):
-            y = table_height / 2 + ((i - rank / 2) * ball_separation)
-            add_ball(x + random.uniform(-balls_noise/2, balls_noise/2),
-                     y + random.uniform(-balls_noise/2, balls_noise/2))
+            y = table_height / 2 + ((i - rank / 2) * initial_separation)
+            rx, ry = rand_inside_circle(max_random_module)
+            add_ball(x + rx, y + ry)
+
     return out
 
 
