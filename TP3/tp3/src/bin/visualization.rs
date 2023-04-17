@@ -6,15 +6,16 @@ use frame_capturer::{CaptureMode, FrameCapturer};
 use itertools::Either;
 use nalgebra::Vector2;
 use nannou::{
-    color::{rgb_u32, Shade, Saturate},
+    color::{rgb_u32, Saturate, Shade},
     prelude::{Rgb, *},
     wgpu::ToTextureView,
 };
 use std::{
+    f64::INFINITY,
     fs::{read_to_string, File},
     io::{BufRead, BufReader},
     num::ParseIntError,
-    path::PathBuf, f64::INFINITY,
+    path::PathBuf,
 };
 use tp3::{
     parser::{input_parser, output_parser},
@@ -42,7 +43,7 @@ fn main() {
 struct Model {
     system_info: InputData,
     frame_iter: Box<dyn Iterator<Item = Frame>>,
-    frame: Option<Frame>,
+    frame: Frame,
     last_frame: Option<Frame>,
     holes: Vec<Vector2<f64>>,
     space_to_texture: Mat4,
@@ -98,10 +99,10 @@ fn model(app: &App) -> Model {
     Model {
         window,
         last_frame: None,
-        frame: Some(Frame {
+        frame: Frame {
             time: 0.0,
-            balls: system_info.balls.clone()
-        }),
+            balls: system_info.balls.clone(),
+        },
         time: 0.0,
         frame_iter,
         holes,
@@ -121,43 +122,47 @@ fn model(app: &App) -> Model {
 }
 
 fn update(app: &App, model: &mut Model, _update: Update) {
-    if let Some(frame) = &model.frame && model.time < frame.time {
+    let frame = &model.frame;
+    if model.time < frame.time {
         let draw = model.frame_capturer.get_draw();
         draw.reset();
 
         let draw = &draw.transform(model.space_to_texture);
         draw.background().color(parse_hex_color("305A4A").unwrap());
         let interpolated_balls = if let Some(last_frame) = &model.last_frame {
-            Either::Left(last_frame.balls.iter().map(|&Ball{id, position, velocity}| Ball{
-                id, 
-                position: position + velocity * (model.time - last_frame.time), 
-                velocity
-            }))
+            Either::Left(last_frame.balls.iter().map(
+                |&Ball {
+                     id,
+                     position,
+                     velocity,
+                 }| Ball {
+                    id,
+                    position: position + velocity * (model.time - last_frame.time),
+                    velocity,
+                },
+            ))
         } else {
             Either::Right(frame.balls.iter().cloned())
         };
         for particle in interpolated_balls {
-            let circle_border = draw.ellipse()
+            let circle_border = draw
+                .ellipse()
                 .radius(model.system_info.ball_radius as f32)
                 .x(particle.position.x as f32)
                 .y(particle.position.y as f32);
-            let circle = draw.ellipse()
+            let circle = draw
+                .ellipse()
                 .radius(model.system_info.ball_radius as f32 - 0.5)
                 .x(particle.position.x as f32)
                 .y(particle.position.y as f32);
 
             if particle.id == 0 {
-                circle_border
-                    .color(WHITE).finish();
-                circle
-                    .color(WHITE).finish();
+                circle_border.color(WHITE).finish();
+                circle.color(WHITE).finish();
             } else {
                 let base = hsv((particle.id as f32 - 1.0) / 15.0, 1.0, 1.0).desaturate(0.1);
-                circle_border
-                    .color(base.darken(0.5))
-                    .finish();
-                circle
-                    .color(base).finish();
+                circle_border.color(base.darken(0.5)).finish();
+                circle.color(base).finish();
             }
         }
 
@@ -179,12 +184,14 @@ fn update(app: &App, model: &mut Model, _update: Update) {
 
         //model.time += update.since_last.as_secs_f64();
         model.time += 0.016666;
-    } else if let Some(frame) = model.frame_iter.next() {
-        model.last_frame = model.frame.clone();
-        model.frame = Some(frame);
     } else {
-        model.last_frame = model.frame.clone();
-        model.frame = Some(Frame { time: INFINITY, balls: model.last_frame.as_ref().unwrap().balls.clone() })
+        while model.time >= model.frame.time {
+            model.last_frame = Some(model.frame.clone());
+            model.frame = model.frame_iter.next().unwrap_or_else(|| Frame {
+                time: INFINITY,
+                balls: model.last_frame.as_ref().unwrap().balls.clone(),
+            });
+        }
     }
 }
 
