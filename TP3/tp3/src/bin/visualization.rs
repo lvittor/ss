@@ -137,20 +137,27 @@ fn update(app: &App, model: &mut Model, _update: Update) {
             Either::Right(frame.balls.iter().cloned())
         };
         for particle in interpolated_balls {
-            let circle = draw.ellipse()
+            let circle_border = draw.ellipse()
                 .radius(model.system_info.ball_radius as f32)
+                .x(particle.position.x as f32)
+                .y(particle.position.y as f32);
+            let circle = draw.ellipse()
+                .radius(model.system_info.ball_radius as f32 - 0.5)
                 .x(particle.position.x as f32)
                 .y(particle.position.y as f32);
 
             if particle.id == 0 {
+                circle_border
+                    .color(WHITE).finish();
                 circle
-                    .color(WHITE);
+                    .color(WHITE).finish();
             } else {
                 let base = hsv((particle.id as f32 - 1.0) / 15.0, 1.0, 1.0).desaturate(0.1);
+                circle_border
+                    .color(base.darken(0.5))
+                    .finish();
                 circle
-                    .color(base)
-                    .stroke_color(base.darken(0.5))
-                    .stroke_weight(0.5);
+                    .color(base).finish();
             }
         }
 
