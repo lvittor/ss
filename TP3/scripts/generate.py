@@ -13,7 +13,7 @@ def rand_inside_circle(radius: float):
     return x, y
 
 
-def generate(table_width: float, table_height: float, min_white_y: float, hole_diameter: float, ball_diameter: float, ball_mass: float, balls_noise: float = 0, seed: Optional[int] = None) -> str:
+def generate(table_width: float, table_height: float, white_y: float, hole_diameter: float, ball_diameter: float, ball_mass: float, seed: Optional[int] = None) -> str:
     if seed is not None:
         random.seed(seed)
     out: str = ""
@@ -27,7 +27,6 @@ def generate(table_width: float, table_height: float, min_white_y: float, hole_d
         out += f"{ball_id} {x} {y} {vx} {vy}\n"
         ball_id += 1
 
-    white_y = random.uniform(min_white_y, table_height / 2)
     add_ball(table_width / 4, white_y, 200, 0)
 
     min_separation = 0.02
@@ -50,5 +49,5 @@ def generate(table_width: float, table_height: float, min_white_y: float, hole_d
 
 
 if __name__ == "__main__":
-    print(generate(table_width=224, table_height=112, min_white_y=42,
-          hole_diameter=5.7*2, ball_diameter=5.7, ball_mass=165, balls_noise=0.1), end='')
+    print(generate(table_width=224, table_height=112, white_y=random.uniform(42, 56),
+          hole_diameter=5.7*2, ball_diameter=5.7, ball_mass=165), end='')
