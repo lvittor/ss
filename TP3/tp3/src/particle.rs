@@ -3,26 +3,28 @@ use std::fmt::Display;
 use cim::particles::ID;
 use nalgebra::Vector2;
 
+use crate::Float;
+
 #[derive(Debug, Clone, Copy)]
 pub struct Ball {
     pub id: ID,
-    pub position: Vector2<f64>,
-    pub velocity: Vector2<f64>,
+    pub position: Vector2<Float>,
+    pub velocity: Vector2<Float>,
 }
 
 #[derive(Debug)]
 pub struct InputData {
-    pub table_width: f64,
-    pub table_height: f64,
-    pub hole_radius: f64,
-    pub ball_radius: f64,
-    pub ball_mass: f64,
+    pub table_width: Float,
+    pub table_height: Float,
+    pub hole_radius: Float,
+    pub ball_radius: Float,
+    pub ball_mass: Float,
     pub balls: Vec<Ball>,
 }
 
 #[derive(Debug, Clone)]
 pub struct Frame {
-    pub time: f64,
+    pub time: Float,
     pub balls: Vec<Ball>,
 }
 

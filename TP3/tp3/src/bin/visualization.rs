@@ -11,7 +11,6 @@ use nannou::{
     wgpu::ToTextureView,
 };
 use std::{
-    f64::INFINITY,
     fs::{read_to_string, File},
     io::{BufRead, BufReader},
     num::ParseIntError,
@@ -20,7 +19,7 @@ use std::{
 use tp3::{
     parser::{input_parser, output_parser},
     particle::{Ball, Frame, InputData},
-    HOLE_POSITIONS,
+    HOLE_POSITIONS, Float,
 };
 
 #[derive(clap::Parser, Debug)]
@@ -45,13 +44,13 @@ struct Model {
     frame_iter: Box<dyn Iterator<Item = Frame>>,
     frame: Frame,
     last_frame: Option<Frame>,
-    holes: Vec<Vector2<f64>>,
+    holes: Vec<Vector2<Float>>,
     space_to_texture: Mat4,
     frame_capturer: FrameCapturer,
     window: window::Id,
     texture_copy: wgpu::Texture,
     texture_copy_view: wgpu::TextureView,
-    time: f64,
+    time: Float,
 }
 
 fn model(app: &App) -> Model {
@@ -188,7 +187,7 @@ fn update(app: &App, model: &mut Model, _update: Update) {
         while model.time >= model.frame.time {
             model.last_frame = Some(model.frame.clone());
             model.frame = model.frame_iter.next().unwrap_or_else(|| Frame {
-                time: INFINITY,
+                time: Float::INFINITY,
                 balls: model.last_frame.as_ref().unwrap().balls.clone(),
             });
         }

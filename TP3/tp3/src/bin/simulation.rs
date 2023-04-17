@@ -13,7 +13,7 @@ use nalgebra::Vector2;
 use tp3::{
     parser::input_parser,
     particle::{Ball, Frame, InputData},
-    HOLE_POSITIONS,
+    HOLE_POSITIONS, Float,
 };
 
 use clap::Parser as _parser;
@@ -28,12 +28,12 @@ struct Args {
     output: Option<String>,
 
     #[arg(short, long)]
-    max_duration: Option<f64>,
+    max_duration: Option<Float>,
 }
 
 #[derive(Debug, Copy, Clone)]
 struct Collision {
-    time: f64,
+    time: Float,
     info: CollisionAgainst,
 }
 
@@ -50,7 +50,7 @@ enum CollisionAgainst {
     Hole(ID),
 }
 
-fn find_collision_between_balls(b1: &Ball, b2: &Ball, radius_sum: f64) -> Option<f64> {
+fn find_collision_between_balls(b1: &Ball, b2: &Ball, radius_sum: Float) -> Option<Float> {
     let delta_v = b2.velocity - b1.velocity;
     let delta_r = b2.position - b1.position;
     let sigma = radius_sum;
@@ -61,7 +61,7 @@ fn find_collision_between_balls(b1: &Ball, b2: &Ball, radius_sum: f64) -> Option
         .then(|| -(delta_v.dot(&delta_r) + d.sqrt()) / (delta_v.dot(&delta_v)))
 }
 
-fn find_collision_against_wall(ball: &Ball, config: &InputData) -> Option<(f64, WallType)> {
+fn find_collision_against_wall(ball: &Ball, config: &InputData) -> Option<(Float, WallType)> {
     let radius = config.ball_radius;
 
     let time_x = if ball.velocity.x > 0.0 {
@@ -90,7 +90,7 @@ fn find_collision_against_wall(ball: &Ball, config: &InputData) -> Option<(f64, 
 
 fn find_earliest_collision(
     state: &[&Ball],
-    holes: &[Vector2<f64>],
+    holes: &[Vector2<Float>],
     config: &InputData,
 ) -> Option<Collision> {
     let mut earliest: Option<Collision> = None;
@@ -157,7 +157,7 @@ fn apply_collision(state: &mut BTreeMap<ID, Ball>, config: &InputData, collision
     }
 }
 
-fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, f64) -> bool>(
+fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
     config: InputData,
     mut output_writer: W,
     mut stop_condition: F,

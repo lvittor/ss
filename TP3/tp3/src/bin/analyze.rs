@@ -8,7 +8,7 @@ use chumsky::Parser;
 use clap::Parser as _parser;
 use tp3::{
     parser::{input_parser, output_parser},
-    particle::Frame,
+    particle::Frame, Float,
 };
 
 #[derive(clap::Parser, Debug)]
@@ -37,7 +37,7 @@ fn main() {
 
     for frame in output_parser(BufReader::new(output_file).lines()) {
         let Frame { time, balls } = frame;
-        let energy: f64 = balls
+        let energy: Float = balls
             .iter()
             .map(|p| 0.5 * system_info.ball_mass * p.velocity.magnitude().powi(2))
             .sum();

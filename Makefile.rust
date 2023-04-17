@@ -25,12 +25,13 @@ ifeq "$(USE_DOCKER)" "TRUE"
 else
 	DOCKER_PREFIX := 
 endif
+FEATURE_ARGS := 
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 build: ## Build all the binaries
-	$(DOCKER_PREFIX) cargo build $(if $(PACKAGE),--package $(PACKAGE)) --all-targets $(BUILD_FLAG)
+	$(DOCKER_PREFIX) cargo build $(if $(PACKAGE),--package $(PACKAGE)) --all-targets $(BUILD_FLAG) $(FEATURE_ARGS)
 
 run:
 	$(DOCKER_PREFIX) cargo run $(if $(PACKAGE),--package $(PACKAGE)) $(if $(BIN),--bin $(BIN)) $(BUILD_FLAG) -- $(ARGS)

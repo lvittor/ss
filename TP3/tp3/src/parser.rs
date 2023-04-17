@@ -1,6 +1,6 @@
 use std::io::{BufRead, Lines};
 
-use crate::particle::{Ball, Frame, InputData};
+use crate::{particle::{Ball, Frame, InputData}, Float};
 use chumsky::{prelude::*, text::newline};
 use cim::particles::ID;
 use itertools::Itertools;
@@ -97,12 +97,12 @@ impl<I: Iterator> CollectedChunks for I {}
 pub fn output_parser<B: BufRead>(file: Lines<B>) -> impl Iterator<Item = Frame> {
     file.map(Result::unwrap).collected_chunks().map(|frame| {
         let mut frame = frame.into_iter();
-        let time: f64 = frame.next().unwrap().parse().unwrap();
+        let time: Float = frame.next().unwrap().parse().unwrap();
         let balls = frame
             .map(|line| {
                 let mut values = line.split_whitespace();
                 let id: ID = values.next().unwrap().parse().unwrap();
-                let [x, y, vx, vy]: [f64; 4] = values
+                let [x, y, vx, vy]: [Float; 4] = values
                     .map(|v| v.parse().unwrap())
                     .collect_vec()
                     .try_into()
