@@ -97,8 +97,11 @@ fn model(app: &App) -> Model {
 
     Model {
         window,
-        frame: None,
         last_frame: None,
+        frame: Some(Frame {
+            time: 0.0,
+            balls: system_info.balls.clone()
+        }),
         time: 0.0,
         frame_iter,
         holes,
