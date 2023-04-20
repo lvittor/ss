@@ -19,7 +19,7 @@ use std::{
 use tp3::{
     parser::{input_parser, output_parser},
     particle::{Ball, Frame, InputData},
-    HOLE_POSITIONS, Float,
+    Float, HOLE_POSITIONS,
 };
 
 #[derive(clap::Parser, Debug)]

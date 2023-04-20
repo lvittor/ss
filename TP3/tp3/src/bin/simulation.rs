@@ -13,7 +13,7 @@ use nalgebra::Vector2;
 use tp3::{
     parser::input_parser,
     particle::{Ball, Frame, InputData},
-    HOLE_POSITIONS, Float,
+    Float, HOLE_POSITIONS,
 };
 
 use clap::Parser as _parser;
@@ -98,8 +98,9 @@ fn find_earliest_collision(
         if let Some(time) = find_collision_between_balls(ball_1, ball_2, config.ball_radius * 2.0)
             && earliest.map(|e| time < e.time).unwrap_or(true)
         {
-            earliest = Some(Collision { time, info: 
-                CollisionAgainst::Ball(ball_1.id, ball_2.id)
+            earliest = Some(Collision {
+                time,
+                info: CollisionAgainst::Ball(ball_1.id, ball_2.id)
             });
         }
     }
@@ -112,8 +113,9 @@ fn find_earliest_collision(
         }, config.ball_radius + config.hole_radius)
             && earliest.map(|e| time < e.time).unwrap_or(true)
         {
-            earliest = Some(Collision { time, info: 
-                CollisionAgainst::Hole(ball.id)
+            earliest = Some(Collision {
+                time,
+                info: CollisionAgainst::Hole(ball.id)
             });
         }
     }
@@ -122,8 +124,9 @@ fn find_earliest_collision(
         if let Some((time, wall_type)) = find_collision_against_wall(ball, config)
             && earliest.map(|e| time < e.time).unwrap_or(true)
         {
-            earliest = Some(Collision { time, info: 
-                CollisionAgainst::Wall(ball.id, wall_type)
+            earliest = Some(Collision {
+                time,
+                info: CollisionAgainst::Wall(ball.id, wall_type)
             });
         }
     }

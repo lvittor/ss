@@ -8,7 +8,8 @@ use chumsky::Parser;
 use clap::Parser as _parser;
 use tp3::{
     parser::{input_parser, output_parser},
-    particle::Frame, Float,
+    particle::Frame,
+    Float,
 };
 
 #[derive(clap::Parser, Debug)]

@@ -1,6 +1,9 @@
 use std::io::{BufRead, Lines};
 
-use crate::{particle::{Ball, Frame, InputData}, Float};
+use crate::{
+    particle::{Ball, Frame, InputData},
+    Float,
+};
 use chumsky::{prelude::*, text::newline};
 use cim::particles::ID;
 use itertools::Itertools;
