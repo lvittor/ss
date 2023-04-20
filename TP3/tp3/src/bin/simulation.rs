@@ -177,28 +177,22 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
         output_writer.write_fmt(format_args!("{frame}")).unwrap();
     }
 
-    while !stop_condition(&state, time) {
-        if let Some(collision) =
-            find_earliest_collision(&state.values().collect_vec(), &holes, &config)
-        {
-            // Forward until earliest collision
-            for ball in state.values_mut() {
-                ball.position += ball.velocity * collision.time;
-            }
-
-            time += collision.time;
-
-            apply_collision(&mut state, &config, collision);
-
-            // Write to output
-            let frame = Frame {
-                time,
-                balls: state.values().copied().collect_vec(),
-            };
-            output_writer.write_fmt(format_args!("{frame}")).unwrap();
-        } else {
-            break;
+    while let Some(collision) = find_earliest_collision(&state.values().collect_vec(), &holes, &config) && !stop_condition(&state, time) {
+        // Forward until earliest collision
+        for ball in state.values_mut() {
+            ball.position += ball.velocity * collision.time;
         }
+
+        time += collision.time;
+
+        apply_collision(&mut state, &config, collision);
+
+        // Write to output
+        let frame = Frame {
+            time,
+            balls: state.values().copied().collect_vec(),
+        };
+        output_writer.write_fmt(format_args!("{frame}")).unwrap();
     }
 }
 
