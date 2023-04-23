@@ -39,7 +39,8 @@ workspace {
         scripts -> data "Writes input file with seed data" 
 
         visualization -> data "Reads input file"
-        run_loop -> data "Writes output file"
+
+        src -> data "Writes output file"
 
         run_simulation -> src "Runs simulation"
 

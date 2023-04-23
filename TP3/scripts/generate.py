@@ -13,7 +13,16 @@ def rand_inside_circle(radius: float):
     return x, y
 
 
-def generate(table_width: float, table_height: float, white_y: float, hole_diameter: float, ball_diameter: float, ball_mass: float, seed: Optional[int] = None) -> str:
+def generate(
+    table_width: float,
+    table_height: float,
+    white_y: float,
+    hole_diameter: float,
+    ball_diameter: float,
+    ball_mass: float,
+    seed: Optional[int] = None,
+    speed: Optional[int] = 200,
+) -> str:
     if seed is not None:
         random.seed(seed)
     out: str = ""
@@ -27,7 +36,7 @@ def generate(table_width: float, table_height: float, white_y: float, hole_diame
         out += f"{ball_id} {x} {y} {vx} {vy}\n"
         ball_id += 1
 
-    add_ball(table_width / 4, white_y, 200, 0)
+    add_ball(table_width / 4, white_y, speed, 0)
 
     min_separation = 0.02
     max_separation = 0.03
@@ -35,8 +44,7 @@ def generate(table_width: float, table_height: float, white_y: float, hole_diame
     initial_separation = ball_diameter + max_separation / 2 + min_separation / 2
     max_random_module = (max_separation - min_separation) / 4
 
-    triangle_height = math.sqrt(
-        initial_separation ** 2 - (initial_separation / 2) ** 2)
+    triangle_height = math.sqrt(initial_separation**2 - (initial_separation / 2) ** 2)
 
     for rank in range(5):
         x = table_width * 3 / 4 + rank * triangle_height
@@ -49,5 +57,14 @@ def generate(table_width: float, table_height: float, white_y: float, hole_diame
 
 
 if __name__ == "__main__":
-    print(generate(table_width=224, table_height=112, white_y=random.uniform(42, 56),
-          hole_diameter=5.7*2, ball_diameter=5.7, ball_mass=165), end='')
+    print(
+        generate(
+            table_width=224,
+            table_height=112,
+            white_y=random.uniform(42, 56),
+            hole_diameter=5.7 * 2,
+            ball_diameter=5.7,
+            ball_mass=165,
+        ),
+        end="",
+    )
