@@ -100,7 +100,7 @@ def run():
                 speed=speed,
             )
         )
-        data["initial_speed"] = 56
+        data["initial_speed"] = speed
         df = pd.concat([df, data], ignore_index=False)
 
     df.to_pickle("data/simulation_runs.pkl")
