@@ -172,3 +172,5 @@ cython_debug/
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,jupyternotebooks
 
 /cargo_home
+
+*.png
