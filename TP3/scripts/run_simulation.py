@@ -79,7 +79,7 @@ def run():
 
     df = pd.DataFrame(
         {
-            "white_y": pd.Series(dtype=float),
+            "initial_speed": pd.Series(dtype=float),
             "run": pd.Series(dtype=int),
             "t": pd.Series(dtype=float),
             "ball_count": pd.Series(dtype=int),
@@ -87,8 +87,8 @@ def run():
         }
     )
 
-    for speed in range(200, 400, 800, 1600, 3200):
-        print(f"white_y={speed}")
+    for speed in (200, 400, 800, 1600, 3200):
+        print(f"initial_speed={speed}")
         data = run_simulation(
             lambda: generate(
                 table_width=224,
@@ -100,7 +100,7 @@ def run():
                 speed=speed,
             )
         )
-        data["white_y"] = 56
+        data["initial_speed"] = 56
         df = pd.concat([df, data], ignore_index=False)
 
     df.to_pickle("data/simulation_runs.pkl")
