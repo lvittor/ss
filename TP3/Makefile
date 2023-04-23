@@ -33,12 +33,16 @@ generate-precision-diff-video:
 		-framerate 60 -pattern_type glob -i 'f64_capture/*.png' \
 		-framerate 60 -pattern_type glob -i 'f32_capture/*.png' \
 		-filter_complex "\
-			[1:v]chromakey=0x305a4a:0.01:0.1[ckout];\
-			[0:v][ckout]blend=all_mode='overlay':all_opacity=0.7 [out]" \
-		-map "[out]" \
-		-c:v libx264 -pix_fmt yuv420p \
+			[1:v]chromakey=0x305a4a:0.01:0.1[ckout]; \
+			[0:v][ckout]blend=all_mode='overlay':all_opacity=0.7,split=2 [mixed0][mixed1]; \
+			[mixed0]trim=end=3.5[v0]; \
+			[mixed1]trim=start=3.5:end=5, \
+				drawtext=text='x0.25':x=(w-text_w-20):y=(h-text_h-20):fontsize=120:fontcolor=white, \
+				setpts=PTS-STARTPTS,setpts=PTS*4[v1]; \
+			[v0][v1]concat" \
+		-c:v h264_nvenc -preset p6 -tune hq -b:v 10M -pix_fmt yuv420p \
 		video.mp4
-		#-c:v h264_nvenc -preset p6 -tune hq -b:v 10M -pix_fmt yuv420p \
+		#-c:v libx264 -pix_fmt yuv420p \
 
 generate-speedup-video:
 	ffmpeg\
