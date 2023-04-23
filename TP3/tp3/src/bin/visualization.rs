@@ -66,8 +66,7 @@ fn model(app: &App) -> Model {
 
     let frame_iter = Box::new(output_parser(BufReader::new(output_file).lines()));
 
-    let space_to_texture = Mat4::from_scale(vec3(1.0, -1.0, 1.0))
-        * Mat4::from_translation(vec3(
+    let space_to_texture = Mat4::from_translation(vec3(
             -(texture_size[0] as f32) / 2.0,
             -(texture_size[1] as f32) / 2.0,
             0.0,
