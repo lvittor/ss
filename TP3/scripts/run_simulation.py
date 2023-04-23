@@ -37,7 +37,7 @@ def run_simulation(input_data: str):
             "run-raw",
             "BIN=simulation",
             "USE_DOCKER=FALSE",
-            f"RUN_ARGS=-i /dev/stdin -o /dev/stdout --max-duration 1000",
+            f"RUN_ARGS=-i /dev/stdin -o /dev/stdout",
         ],
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
@@ -71,12 +71,32 @@ def run_simulation(input_data: str):
         dtype={"t": np.float64, "ball_count": np.uint64, "kinetic_energy": np.float64},
     )
 
+def run_multiple_ys():
+    df = pd.DataFrame({
+        'white_y': pd.Series(dtype=float),
+        'run': pd.Series(dtype=int),
+        't': pd.Series(dtype=float),
+        'ball_count': pd.Series(dtype=int),
+        'kinetic_energy': pd.Series(dtype=float),
+    })
 
-def run():
-    L = 20
-    Rc = 0.5
-    speed = 0.03
+    for white_y in range(47, 56+1):
+        print(f"white_y={white_y}")
+        data = run_simulation(lambda: generate(
+            table_width=224,
+            table_height=112,
+            white_y=white_y,
+            hole_diameter=5.7*2,
+            ball_diameter=5.7,
+            ball_mass=165
+        ))
+        data['white_y'] = white_y
+        df = pd.concat([df, data], ignore_index=False)
 
+    df.to_pickle("data/simulation_runs_ys.pkl")
+    print(df)
+
+def run_multiple_speeds():
     df = pd.DataFrame(
         {
             "initial_speed": pd.Series(dtype=float),
@@ -103,10 +123,9 @@ def run():
         data["initial_speed"] = speed
         df = pd.concat([df, data], ignore_index=False)
 
-    df.to_pickle("data/simulation_runs.pkl")
+    df.to_pickle("data/simulation_runs_speeds.pkl")
     print(df)
 
-
 if __name__ == "__main__":
-    # print(run_simulation(generate(300, 7.0, 0.5, 0.2, 0.03)))
-    run()
+    run_multiple_speeds()
+    run_multiple_ys()
