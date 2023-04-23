@@ -21,7 +21,7 @@ def generate(
     ball_diameter: float,
     ball_mass: float,
     seed: Optional[int] = None,
-    speed: Optional[int] = 200,
+    speed: int = 200,
 ) -> str:
     if seed is not None:
         random.seed(seed)
