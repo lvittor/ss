@@ -142,6 +142,8 @@ fn draw(_app: &App, model: &Model, draw: &Draw) {
         }
     }
 
+    let hole_color = parse_hex_color("182d25").unwrap();
+
     for hole in &model.holes {
         draw.ellipse()
             .radius(model.system_info.hole_radius as f32)
@@ -150,9 +152,25 @@ fn draw(_app: &App, model: &Model, draw: &Draw) {
             //.no_fill()
             //.stroke_weight(1.0)
             //.stroke(GRAY)
-            .color(parse_hex_color("182d25").unwrap())
+            .color(hole_color)
             .finish();
     }
+
+    let pool_rect = Rect::from_corners(
+        Vec2::ZERO,
+        vec2(
+            model.system_info.table_width as f32,
+            model.system_info.table_height as f32,
+        ),
+    )
+    .pad(-model.system_info.hole_radius as f32 / 2.0);
+
+    draw.rect()
+        .xy(pool_rect.xy())
+        .wh(pool_rect.wh())
+        .no_fill()
+        .stroke_weight(model.system_info.hole_radius as f32)
+        .stroke(hole_color);
 }
 
 fn parse_hex_color(s: &str) -> Result<Rgb<u8>, ParseIntError> {
