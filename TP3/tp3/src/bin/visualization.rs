@@ -1,14 +1,13 @@
 #![feature(let_chains)]
 
+use capturable_visualization::VisualizationBuilder;
 use chumsky::Parser;
 use clap::Parser as _parser;
-use frame_capturer::{CaptureMode, FrameCapturer};
 use itertools::Either;
 use nalgebra::Vector2;
 use nannou::{
     color::{rgb_u32, Saturate, Shade},
     prelude::{Rgb, *},
-    wgpu::ToTextureView,
 };
 use std::{
     fs::{read_to_string, File},
@@ -36,7 +35,18 @@ struct Args {
 }
 
 fn main() {
-    nannou::app(model).update(update).exit(exit).run();
+    let args = Args::parse();
+    let capture_directory = args.capture_directory.clone();
+    let mut visualization = VisualizationBuilder::new(|app| model(app, args))
+        .update(update)
+        .draw(draw)
+        .with_aspect_ratio(2.0);
+
+    if let Some(capture_directory) = capture_directory {
+        visualization = visualization.with_capture(capture_directory.to_owned(), (2160, 1080));
+    }
+
+    visualization.run();
 }
 
 struct Model {
@@ -45,18 +55,10 @@ struct Model {
     frame: Frame,
     last_frame: Option<Frame>,
     holes: Vec<Vector2<Float>>,
-    space_to_texture: Mat4,
-    frame_capturer: FrameCapturer,
-    window: window::Id,
-    texture_copy: wgpu::Texture,
-    texture_copy_view: wgpu::TextureView,
     time: Float,
 }
 
-fn model(app: &App) -> Model {
-    let texture_size = [2160, 1080];
-
-    let args = Args::parse();
+fn model(_app: &App, args: Args) -> Model {
     let input = read_to_string(args.input).unwrap();
     let output_file = File::open(args.output).unwrap();
     let system_info = input_parser()
@@ -66,27 +68,6 @@ fn model(app: &App) -> Model {
 
     let frame_iter = Box::new(output_parser(BufReader::new(output_file).lines()));
 
-    let space_to_texture = Mat4::from_translation(vec3(
-            -(texture_size[0] as f32) / 2.0,
-            -(texture_size[1] as f32) / 2.0,
-            0.0,
-        ))
-        * Mat4::from_scale({
-            let scale = texture_size[1] as f32 / system_info.table_height as f32;
-            Vec3::new(scale, scale, scale)
-        });
-
-    let window = app.new_window().view(view).build().unwrap();
-
-    let texture_copy = nannou::wgpu::TextureBuilder::new()
-        .size(texture_size)
-        .format(nannou::Frame::TEXTURE_FORMAT)
-        .sample_count(1)
-        .usage(wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING)
-        .build(app.window(window).unwrap().device());
-
-    let texture_copy_view = texture_copy.to_texture_view();
-
     let holes = Vec::from(HOLE_POSITIONS.map(|v| {
         v.component_mul(&Vector2::new(
             system_info.table_width,
@@ -95,7 +76,6 @@ fn model(app: &App) -> Model {
     }));
 
     Model {
-        window,
         last_frame: None,
         frame: Frame {
             time: 0.0,
@@ -105,81 +85,12 @@ fn model(app: &App) -> Model {
         frame_iter,
         holes,
         system_info,
-        space_to_texture,
-        frame_capturer: FrameCapturer::new(
-            &app.window(window).unwrap(),
-            texture_size,
-            match args.capture_directory {
-                Some(directory) => CaptureMode::Capture { directory },
-                None => CaptureMode::NoCapture,
-            },
-        ),
-        texture_copy,
-        texture_copy_view,
     }
 }
 
-fn update(app: &App, model: &mut Model, _update: Update) {
+fn update(_app: &App, model: &mut Model, _update: Update) {
     let frame = &model.frame;
     if model.time < frame.time {
-        let draw = model.frame_capturer.get_draw();
-        draw.reset();
-
-        let draw = &draw.transform(model.space_to_texture);
-        draw.background().color(parse_hex_color("305A4A").unwrap());
-        let interpolated_balls = if let Some(last_frame) = &model.last_frame {
-            Either::Left(last_frame.balls.iter().map(
-                |&Ball {
-                     id,
-                     position,
-                     velocity,
-                 }| Ball {
-                    id,
-                    position: position + velocity * (model.time - last_frame.time),
-                    velocity,
-                },
-            ))
-        } else {
-            Either::Right(frame.balls.iter().cloned())
-        };
-        for particle in interpolated_balls {
-            let circle_border = draw
-                .ellipse()
-                .radius(model.system_info.ball_radius as f32)
-                .x(particle.position.x as f32)
-                .y(particle.position.y as f32);
-            let circle = draw
-                .ellipse()
-                .radius(model.system_info.ball_radius as f32 - 0.5)
-                .x(particle.position.x as f32)
-                .y(particle.position.y as f32);
-
-            if particle.id == 0 {
-                circle_border.color(WHITE).finish();
-                circle.color(WHITE).finish();
-            } else {
-                let base = hsv((particle.id as f32 - 1.0) / 15.0, 1.0, 1.0).desaturate(0.1);
-                circle_border.color(base.darken(0.5)).finish();
-                circle.color(base).finish();
-            }
-        }
-
-        for hole in &model.holes {
-            draw.ellipse()
-                .radius(model.system_info.hole_radius as f32)
-                .x(hole.x as f32)
-                .y(hole.y as f32)
-                //.no_fill()
-                //.stroke_weight(1.0)
-                //.stroke(GRAY)
-                .color(parse_hex_color("182d25").unwrap())
-                .finish();
-        }
-
-        model
-            .frame_capturer
-            .render_to_texture(&app.window(model.window).unwrap());
-
         //model.time += update.since_last.as_secs_f64();
         model.time += 0.016666;
     } else {
@@ -193,35 +104,60 @@ fn update(app: &App, model: &mut Model, _update: Update) {
     }
 }
 
+fn draw(_app: &App, model: &Model, draw: &Draw) {
+    let draw = draw.scale(1.0 / model.system_info.table_height as f32);
+    draw.background().color(parse_hex_color("305A4A").unwrap());
+    let interpolated_balls = if let Some(last_frame) = &model.last_frame {
+        Either::Left(last_frame.balls.iter().map(
+            |&Ball {
+                 id,
+                 position,
+                 velocity,
+             }| Ball {
+                id,
+                position: position + velocity * (model.time - last_frame.time),
+                velocity,
+            },
+        ))
+    } else {
+        Either::Right(model.frame.balls.iter().cloned())
+    };
+
+    for particle in interpolated_balls {
+        let circle_border = draw
+            .ellipse()
+            .radius(model.system_info.ball_radius as f32)
+            .x(particle.position.x as f32)
+            .y(particle.position.y as f32);
+        let circle = draw
+            .ellipse()
+            .radius(model.system_info.ball_radius as f32 - 0.5)
+            .x(particle.position.x as f32)
+            .y(particle.position.y as f32);
+
+        if particle.id == 0 {
+            circle_border.color(WHITE).finish();
+            circle.color(WHITE).finish();
+        } else {
+            let base = hsv((particle.id as f32 - 1.0) / 15.0, 1.0, 1.0).desaturate(0.1);
+            circle_border.color(base.darken(0.5)).finish();
+            circle.color(base).finish();
+        }
+    }
+
+    for hole in &model.holes {
+        draw.ellipse()
+            .radius(model.system_info.hole_radius as f32)
+            .x(hole.x as f32)
+            .y(hole.y as f32)
+            //.no_fill()
+            //.stroke_weight(1.0)
+            //.stroke(GRAY)
+            .color(parse_hex_color("182d25").unwrap())
+            .finish();
+    }
+}
+
 fn parse_hex_color(s: &str) -> Result<Rgb<u8>, ParseIntError> {
     u32::from_str_radix(s, 16).map(rgb_u32)
-}
-
-fn view(app: &App, model: &Model, frame: nannou::Frame) {
-    {
-        let mut encoder = frame.command_encoder();
-        model
-            .frame_capturer
-            .draw_to_texture(&mut encoder, &model.texture_copy_view);
-    }
-    let scale = {
-        let [w, h] = model.texture_copy.size();
-        let w = w as f32;
-        let h = h as f32;
-        let [win_w, win_h] = frame.texture_size();
-        let win_w = win_w as f32;
-        let win_h = win_h as f32;
-        f32::min(win_w / w, win_h / h)
-    };
-    let draw = app
-        .draw()
-        .scale(scale / app.window(model.window).unwrap().scale_factor());
-    draw.texture(&model.texture_copy);
-    draw.to_frame(app, &frame).unwrap();
-}
-
-fn exit(app: &App, model: Model) {
-    model
-        .frame_capturer
-        .wait_for_image_writing(&app.main_window());
 }
