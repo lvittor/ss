@@ -15,7 +15,7 @@ frame_capturer = { path = "utils/frame_capturer" }
 capturable_visualization = { path = "utils/capturable_visualization" }
 clap = { version = "4.1.8", features = ["derive"] }
 itertools = "0.10.5"
-nannou = { git = "https://github.com/nannou-org/nannou.git" }
+nannou = { git = "https://github.com/alansartorio/nannou.git", branch = "model-closure" }
 ndarray = "0.15.6"
 rand = "0.8.5"
 glam = "0.23.0"
