@@ -89,18 +89,15 @@ fn model(_app: &App, args: Args) -> Model {
 }
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
-    let frame = &model.frame;
-    if model.time < frame.time {
-        //model.time += update.since_last.as_secs_f64();
-        model.time += 0.016666;
-    } else {
-        while model.time >= model.frame.time {
-            model.last_frame = Some(model.frame.clone());
-            model.frame = model.frame_iter.next().unwrap_or_else(|| Frame {
-                time: Float::INFINITY,
-                balls: model.last_frame.as_ref().unwrap().balls.clone(),
-            });
-        }
+    //model.time += update.since_last.as_secs_f64();
+    model.time += 0.016666;
+
+    while model.time >= model.frame.time {
+        model.last_frame = Some(model.frame.clone());
+        model.frame = model.frame_iter.next().unwrap_or_else(|| Frame {
+            time: Float::INFINITY,
+            balls: model.last_frame.as_ref().unwrap().balls.clone(),
+        });
     }
 }
 
