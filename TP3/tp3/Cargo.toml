@@ -16,7 +16,7 @@ nannou = { workspace = true }
 utf8-chars = "2.0.3"
 itertools = { workspace = true }
 nalgebra = { workspace = true }
-pool = { workspace = true, default-features = false }
+pool = { workspace = true }
 
 [features]
 use_f32 = ["pool/use_f32"]

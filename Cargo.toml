@@ -21,4 +21,4 @@ nalgebra = "0.32.2"
 cim = { path = "utils/cim" }
 frame_capturer = { path = "utils/frame_capturer" }
 capturable_visualization = { path = "utils/capturable_visualization" }
-pool = { path = "utils/pool" }
+pool = { path = "utils/pool", default-features = false }
