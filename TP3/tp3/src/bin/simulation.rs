@@ -10,9 +10,9 @@ use std::{
 
 use itertools::Itertools;
 use nalgebra::Vector2;
-use tp3::{
+use pool::{
     parser::input_parser,
-    particle::{Ball, Frame, InputData},
+    models::{Ball, Frame, InputData},
     Float, HOLE_POSITIONS,
 };
 

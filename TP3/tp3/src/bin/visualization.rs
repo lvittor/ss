@@ -15,9 +15,9 @@ use std::{
     num::ParseIntError,
     path::PathBuf,
 };
-use tp3::{
+use pool::{
     parser::{input_parser, output_parser},
-    particle::{Ball, Frame, InputData},
+    models::{Ball, Frame, InputData},
     Float, HOLE_POSITIONS,
 };
 

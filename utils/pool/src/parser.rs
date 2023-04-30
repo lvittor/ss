@@ -1,7 +1,7 @@
 use std::io::{BufRead, Lines};
 
 use crate::{
-    particle::{Ball, Frame, InputData},
+    models::{Ball, Frame, InputData},
     Float,
 };
 use chumsky::{prelude::*, text::newline};

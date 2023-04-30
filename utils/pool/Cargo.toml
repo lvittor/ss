@@ -1,0 +1,17 @@
+[package]
+name = "pool"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cim = { workspace = true }
+chumsky = { workspace = true }
+clap = { workspace = true }
+nannou = { workspace = true }
+itertools = { workspace = true }
+nalgebra = { workspace = true }
+
+[features]
+use_f32 = []
+use_f64 = []
+default = ["use_f64"]
