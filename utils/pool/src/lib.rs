@@ -2,6 +2,7 @@ use nalgebra::Vector2;
 
 pub mod models;
 pub mod parser;
+pub mod draw;
 
 #[cfg(feature = "use_f64")]
 pub type Float = f64;

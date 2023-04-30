@@ -5,20 +5,17 @@ use chumsky::Parser;
 use clap::Parser as _parser;
 use itertools::Either;
 use nalgebra::Vector2;
-use nannou::{
-    color::{rgb_u32, Saturate, Shade},
-    prelude::{Rgb, *},
+use nannou::prelude::*;
+use pool::{
+    draw::draw as draw_pool,
+    models::{Ball, Frame, InputData},
+    parser::{input_parser, output_parser},
+    Float, HOLE_POSITIONS,
 };
 use std::{
     fs::{read_to_string, File},
     io::{BufRead, BufReader},
-    num::ParseIntError,
     path::PathBuf,
-};
-use pool::{
-    parser::{input_parser, output_parser},
-    models::{Ball, Frame, InputData},
-    Float, HOLE_POSITIONS,
 };
 
 #[derive(clap::Parser, Debug)]
@@ -102,8 +99,6 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
 }
 
 fn draw(_app: &App, model: &Model, draw: &Draw) {
-    let draw = draw.scale(1.0 / model.system_info.table_height as f32);
-    draw.background().color(parse_hex_color("305A4A").unwrap());
     let interpolated_balls = if let Some(last_frame) = &model.last_frame {
         Either::Left(last_frame.balls.iter().map(
             |&Ball {
@@ -120,59 +115,5 @@ fn draw(_app: &App, model: &Model, draw: &Draw) {
         Either::Right(model.frame.balls.iter().cloned())
     };
 
-    for particle in interpolated_balls {
-        let circle_border = draw
-            .ellipse()
-            .radius(model.system_info.ball_radius as f32)
-            .x(particle.position.x as f32)
-            .y(particle.position.y as f32);
-        let circle = draw
-            .ellipse()
-            .radius(model.system_info.ball_radius as f32 - 0.5)
-            .x(particle.position.x as f32)
-            .y(particle.position.y as f32);
-
-        if particle.id == 0 {
-            circle_border.color(WHITE).finish();
-            circle.color(WHITE).finish();
-        } else {
-            let base = hsv((particle.id as f32 - 1.0) / 15.0, 1.0, 1.0).desaturate(0.1);
-            circle_border.color(base.darken(0.5)).finish();
-            circle.color(base).finish();
-        }
-    }
-
-    let hole_color = parse_hex_color("182d25").unwrap();
-
-    for hole in &model.holes {
-        draw.ellipse()
-            .radius(model.system_info.hole_radius as f32)
-            .x(hole.x as f32)
-            .y(hole.y as f32)
-            //.no_fill()
-            //.stroke_weight(1.0)
-            //.stroke(GRAY)
-            .color(hole_color)
-            .finish();
-    }
-
-    let pool_rect = Rect::from_corners(
-        Vec2::ZERO,
-        vec2(
-            model.system_info.table_width as f32,
-            model.system_info.table_height as f32,
-        ),
-    )
-    .pad(-model.system_info.hole_radius as f32 / 2.0);
-
-    draw.rect()
-        .xy(pool_rect.xy())
-        .wh(pool_rect.wh())
-        .no_fill()
-        .stroke_weight(model.system_info.hole_radius as f32)
-        .stroke(hole_color);
-}
-
-fn parse_hex_color(s: &str) -> Result<Rgb<u8>, ParseIntError> {
-    u32::from_str_radix(s, 16).map(rgb_u32)
+    draw_pool(&model.system_info, interpolated_balls, &model.holes, draw);
 }
