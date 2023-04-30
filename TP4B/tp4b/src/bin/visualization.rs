@@ -3,12 +3,11 @@
 use capturable_visualization::VisualizationBuilder;
 use chumsky::Parser;
 use clap::Parser as _parser;
-use itertools::Either;
 use nalgebra::Vector2;
 use nannou::prelude::*;
 use pool::{
     draw::draw as draw_pool,
-    models::{Ball, Frame, InputData},
+    models::{Frame, InputData},
     parser::{input_parser, output_parser},
     Float, HOLE_POSITIONS,
 };
@@ -50,9 +49,7 @@ struct Model {
     system_info: InputData,
     frame_iter: Box<dyn Iterator<Item = Frame>>,
     frame: Frame,
-    last_frame: Option<Frame>,
     holes: Vec<Vector2<Float>>,
-    time: Float,
 }
 
 fn model(_app: &App, args: Args) -> Model {
@@ -73,12 +70,10 @@ fn model(_app: &App, args: Args) -> Model {
     }));
 
     Model {
-        last_frame: None,
         frame: Frame {
             time: 0.0,
             balls: system_info.balls.clone(),
         },
-        time: 0.0,
         frame_iter,
         holes,
         system_info,
@@ -86,34 +81,11 @@ fn model(_app: &App, args: Args) -> Model {
 }
 
 fn update(_app: &App, model: &mut Model, _update: Update) {
-    //model.time += update.since_last.as_secs_f64();
-    model.time += 0.016666;
-
-    while model.time >= model.frame.time {
-        model.last_frame = Some(model.frame.clone());
-        model.frame = model.frame_iter.next().unwrap_or_else(|| Frame {
-            time: Float::INFINITY,
-            balls: model.last_frame.as_ref().unwrap().balls.clone(),
-        });
+    if let Some(frame) = model.frame_iter.next() {
+        model.frame = frame;
     }
 }
 
 fn draw(_app: &App, model: &Model, draw: &Draw) {
-    let interpolated_balls = if let Some(last_frame) = &model.last_frame {
-        Either::Left(last_frame.balls.iter().map(
-            |&Ball {
-                 id,
-                 position,
-                 velocity,
-             }| Ball {
-                id,
-                position: position + velocity * (model.time - last_frame.time),
-                velocity,
-            },
-        ))
-    } else {
-        Either::Right(model.frame.balls.iter().cloned())
-    };
-
-    draw_pool(&model.system_info, interpolated_balls, &model.holes, draw);
+    draw_pool(&model.system_info, model.frame.balls.iter().cloned(), &model.holes, draw);
 }

@@ -15,7 +15,7 @@ fn parse_hex_color(s: &str) -> Result<Rgb<u8>, ParseIntError> {
     u32::from_str_radix(s, 16).map(rgb_u32)
 }
 
-pub fn draw<BI: Iterator<Item = Ball>>(
+pub fn draw<BI: IntoIterator<Item = Ball>>(
     system_info: &InputData,
     balls: BI,
     holes: &[Vector2<Float>],

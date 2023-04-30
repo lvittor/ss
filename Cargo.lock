@@ -2421,6 +2421,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "tp4b"
+version = "0.1.0"
+dependencies = [
+ "capturable_visualization",
+ "chumsky",
+ "cim",
+ "clap",
+ "frame_capturer",
+ "itertools",
+ "nalgebra",
+ "nannou",
+ "pool",
+ "rand 0.8.5",
+ "utf8-chars",
+]
+
+[[package]]
 name = "typenum"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

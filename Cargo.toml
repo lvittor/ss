@@ -4,6 +4,7 @@ members = [
     "TP1/tp1",
     "TP2/tp2",
     "TP3/tp3",
+    "TP4B/tp4b",
     "utils/*",
 ]
 [workspace.dependencies]
