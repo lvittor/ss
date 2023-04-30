@@ -1,7 +1,6 @@
-use std::ops::Div;
+use std::collections::HashMap;
 
 use nalgebra::Vector2;
-use ndarray::{Array2, Dim};
 
 use crate::{
     neighbor_finder::{NeighborFinder, NeighborMap},
@@ -13,19 +12,22 @@ pub struct CimNeighborFinder;
 pub struct SystemInfo {
     pub cyclic: bool,
     pub interaction_radius: f64,
-    pub space_length: f64,
-    pub grid_size: usize,
+    pub space_width: f64,
+    pub space_height: f64,
+    pub columns: usize,
+    pub rows: usize,
 }
 
 impl<P: CircularParticle> NeighborFinder<P, SystemInfo> for CimNeighborFinder {
     fn find_neighbors(particles: &[P], system: SystemInfo) -> NeighborMap<ID> {
-        let mut cells: Array2<Vec<P>> = Array2::default(Dim([system.grid_size, system.grid_size]));
-        let cell_length = system.space_length / system.grid_size as f64;
+        let mut cells: HashMap<(_, _), Vec<P>> = HashMap::new();
 
+        let cell_width = system.space_width / system.columns as f64;
+        let cell_height = system.space_height / system.rows as f64;
         let get_cell_index = |particle: &P| -> Vector2<usize> {
             particle
                 .get_position()
-                .div(cell_length)
+                .component_div(&Vector2::new(cell_width, cell_height))
                 .apply_into(|v| *v = v.floor())
                 .try_cast()
                 .unwrap()
@@ -42,12 +44,15 @@ impl<P: CircularParticle> NeighborFinder<P, SystemInfo> for CimNeighborFinder {
             .filter_map(move |v| {
                 let new_index = v + cell_index.cast();
                 if system.cyclic {
-                    Some(new_index.map(|v| v.rem_euclid(system.grid_size as i32) as usize))
+                    Some(Vector2::new(
+                        new_index.x.rem_euclid(system.columns as i32) as usize,
+                        new_index.y.rem_euclid(system.rows as i32) as usize,
+                    ))
                 } else {
                     (new_index.x >= 0
                         && new_index.y >= 0
-                        && (new_index.x as usize) < system.grid_size
-                        && (new_index.y as usize) < system.grid_size)
+                        && (new_index.x as usize) < system.columns
+                        && (new_index.y as usize) < system.rows)
                         .then(|| new_index.try_cast().unwrap())
                 }
             })
@@ -56,7 +61,10 @@ impl<P: CircularParticle> NeighborFinder<P, SystemInfo> for CimNeighborFinder {
         // Fill the cell matrix with particles.
         for particle in particles {
             let cell_index = get_cell_index(particle);
-            cells[(cell_index.y, cell_index.x)].push(*particle);
+            cells
+                .entry((cell_index.y, cell_index.x))
+                .or_insert_with(Vec::new)
+                .push(*particle);
         }
 
         let mut map = NeighborMap::default();
@@ -64,17 +72,20 @@ impl<P: CircularParticle> NeighborFinder<P, SystemInfo> for CimNeighborFinder {
         for particle in particles {
             let cell_index = get_cell_index(particle);
             for other_cell in get_cells_to_check(cell_index) {
-                for other in &cells[(other_cell.y, other_cell.x)] {
-                    // If we are in the same cell, we only check the same pair once.
-                    if (other_cell != cell_index || other.get_id() > particle.get_id())
-                        && particle.is_within_distance_of(
-                            other,
-                            system.interaction_radius,
-                            system.space_length,
-                            system.cyclic,
-                        )
-                    {
-                        map.add_pair(particle.get_id(), other.get_id());
+                if let Some(cell) = cells.get(&(other_cell.y, other_cell.x)) {
+                    for other in cell {
+                        // If we are in the same cell, we only check the same pair once.
+                        if (other_cell != cell_index || other.get_id() > particle.get_id())
+                            && particle.is_within_distance_of(
+                                other,
+                                system.interaction_radius,
+                                system.space_width,
+                                system.space_height,
+                                system.cyclic,
+                            )
+                        {
+                            map.add_pair(particle.get_id(), other.get_id());
+                        }
                     }
                 }
             }

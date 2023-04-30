@@ -41,7 +41,8 @@ fn main() {
             simple_finder::SystemInfo {
                 cyclic: args.cyclic,
                 interaction_radius: input.interaction_radius,
-                space_length: input.space_length,
+                space_width: input.space_length,
+                space_height: input.space_length,
             },
         )
     } else {
@@ -50,8 +51,10 @@ fn main() {
             cim_finder::SystemInfo {
                 cyclic: args.cyclic,
                 interaction_radius: input.interaction_radius,
-                space_length: input.space_length,
-                grid_size: input.grid_size,
+                space_width: input.space_length,
+                space_height: input.space_length,
+                columns: input.grid_size,
+                rows: input.grid_size,
             },
         )
     };
