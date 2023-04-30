@@ -1,5 +1,6 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
+use itertools::Itertools;
 use nalgebra::Vector2;
 
 use crate::{
@@ -20,7 +21,7 @@ pub struct SystemInfo {
 
 impl<P: CircularParticle> NeighborFinder<P, SystemInfo> for CimNeighborFinder {
     fn find_neighbors(particles: &[P], system: SystemInfo) -> NeighborMap<ID> {
-        let mut cells: HashMap<(_, _), Vec<P>> = HashMap::new();
+        let mut cells: BTreeMap<(_, _), Vec<P>> = BTreeMap::new();
 
         let cell_width = system.space_width / system.columns as f64;
         let cell_height = system.space_height / system.rows as f64;
@@ -63,19 +64,19 @@ impl<P: CircularParticle> NeighborFinder<P, SystemInfo> for CimNeighborFinder {
             let cell_index = get_cell_index(particle);
             cells
                 .entry((cell_index.y, cell_index.x))
-                .or_insert_with(Vec::new)
+                .or_insert_with(|| Vec::with_capacity(2))
                 .push(*particle);
         }
 
         let mut map = NeighborMap::default();
 
-        for particle in particles {
-            let cell_index = get_cell_index(particle);
-            for other_cell in get_cells_to_check(cell_index) {
-                if let Some(cell) = cells.get(&(other_cell.y, other_cell.x)) {
-                    for other in cell {
+        for (cell_index, cell) in &cells {
+            let cell_index = Vector2::new(cell_index.1, cell_index.0);
+            for other_cell_index in get_cells_to_check(cell_index) {
+                if let Some(other_cell) = cells.get(&(other_cell_index.y, other_cell_index.x)) {
+                    for (particle, other) in cell.iter().cartesian_product(other_cell.iter()) {
                         // If we are in the same cell, we only check the same pair once.
-                        if (other_cell != cell_index || other.get_id() > particle.get_id())
+                        if (other_cell_index != cell_index || other.get_id() > particle.get_id())
                             && particle.is_within_distance_of(
                                 other,
                                 system.interaction_radius,

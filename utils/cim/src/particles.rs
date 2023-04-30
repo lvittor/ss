@@ -14,8 +14,9 @@ pub trait CircularParticle: Clone + Copy {
         space_height: f64,
         cyclic: bool,
     ) -> bool {
-        let mut delta = (self.get_position() - other.get_position()).abs();
+        let mut delta = self.get_position() - other.get_position();
         if cyclic {
+            delta = delta.abs();
             if delta.x > 0.5 * space_width {
                 delta.x = space_width - delta.x;
             }

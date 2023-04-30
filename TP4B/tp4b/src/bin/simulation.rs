@@ -1,13 +1,14 @@
 #![feature(let_chains)]
 
-use chumsky::{prelude::Input, Parser};
-use cim::{cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder, particles::ID};
+use chumsky::Parser;
+use cim::{
+    cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder, particles::ID,
+    simple_finder::SimpleNeighborFinder,
+};
 use std::{
     collections::{BTreeMap, HashMap},
     fs::{self, File},
     io::{stdout, Write},
-    thread,
-    time::Duration,
 };
 
 use itertools::Itertools;
@@ -34,16 +35,15 @@ struct Args {
 
     #[arg(short, long)]
     with_holes: bool,
+
+    #[arg(short, long)]
+    max_duration: Option<f64>,
 }
 
 struct InputData {
     simple_input_data: SimpleInputData,
     delta_time_n: u16,
     with_holes: bool,
-}
-
-fn are_balls_colliding(b1: &Ball, b2: &Ball, radius_sum: Float) -> bool {
-    (b1.position - b2.position).magnitude_squared() < radius_sum.powi(2)
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -182,12 +182,12 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
         .map(|p| (p.id, p))
         .collect();
 
-    let holes = HOLE_POSITIONS.map(|v| {
-        v.component_mul(&Vector2::new(
-            config.simple_input_data.table_width,
-            config.simple_input_data.table_height,
-        ))
-    });
+    //let holes = HOLE_POSITIONS.map(|v| {
+    //v.component_mul(&Vector2::new(
+    //config.simple_input_data.table_width,
+    //config.simple_input_data.table_height,
+    //))
+    //});
 
     {
         // Write to output
@@ -206,17 +206,30 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
 
         let radius_sum = config.simple_input_data.ball_radius * 2.0;
 
-        let neighbors = CimNeighborFinder::find_neighbors(
+        let neighbors = SimpleNeighborFinder::find_neighbors(
             &state.values().cloned().collect_vec(),
-            cim::cim_finder::SystemInfo {
-                cyclic: true,
+            cim::simple_finder::SystemInfo {
+                cyclic: false,
                 interaction_radius: 0.0,
                 space_width: config.simple_input_data.table_width,
                 space_height: config.simple_input_data.table_height,
-                columns: (config.simple_input_data.table_width / radius_sum).ceil() as usize,
-                rows: (config.simple_input_data.table_height / radius_sum).ceil() as usize,
             },
         );
+
+        /* 
+         * It's slower for normal ball count but faster for more balls
+        let neighbors = CimNeighborFinder::find_neighbors(
+            &state.values().cloned().collect_vec(),
+            cim::cim_finder::SystemInfo {
+                cyclic: false,
+                interaction_radius: 0.0,
+                space_width: config.simple_input_data.table_width,
+                space_height: config.simple_input_data.table_height,
+                columns: (config.simple_input_data.table_width / radius_sum).floor() as usize,
+                rows: (config.simple_input_data.table_height / radius_sum).floor() as usize,
+            },
+        );
+        */
 
         for (&id, ball) in &state {
             let neighs = neighbors.get_neighbors(id);
@@ -295,5 +308,8 @@ fn main() {
         Box::new(stdout())
     };
 
-    run(input, writer, |_state, _t| false);
+    run(input, writer, |_state, t| {
+        args.max_duration
+            .is_some_and(|max_duration| t > max_duration)
+    });
 }
