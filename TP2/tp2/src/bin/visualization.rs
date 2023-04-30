@@ -38,7 +38,7 @@ fn main() {
         .draw(draw);
 
     if let Some(capture_directory) = capture_directory {
-        visualization = visualization.with_capture(capture_directory.to_owned(), (1080, 1080));
+        visualization = visualization.with_capture(capture_directory, (1080, 1080));
     }
 
     visualization.run();
