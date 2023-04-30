@@ -5,7 +5,9 @@ use cim::particles::ID;
 use std::{
     collections::{BTreeMap, HashMap},
     fs::{self, File},
-    io::{stdout, Write}, thread, time::Duration,
+    io::{stdout, Write},
+    thread,
+    time::Duration,
 };
 
 use itertools::Itertools;
@@ -40,7 +42,10 @@ struct InputData {
     with_holes: bool,
 }
 
-/*
+fn are_balls_colliding(b1: &Ball, b2: &Ball, radius_sum: Float) -> bool {
+    (b1.position - b2.position).magnitude_squared() < radius_sum.powi(2)
+}
+
 #[derive(Debug, Copy, Clone)]
 enum Wall {
     Left,
@@ -49,32 +54,27 @@ enum Wall {
     Bottom,
 }
 
-fn find_collision_between_balls(b1: &Ball, b2: &Ball, radius_sum: Float) -> bool {
-    (b1.position - b2.position).magnitude_squared() < radius_sum
-}
+fn did_ball_go_outside(ball: &Ball, config: &InputData) -> Vec<Wall> {
+    let mut collisions = Vec::with_capacity(2);
+    let radius = config.simple_input_data.ball_radius;
 
-fn find_collision_against_wall(ball: &Ball, config: &InputData) -> Vec<Wall> {
-    let collisions = Vec::with_capacity(2);
-    let radius = config.ball_radius;
-
-    if ball.position.x < 0.0 {
+    if ball.position.x - radius < 0.0 {
         collisions.push(Wall::Left)
-    } else if ball.position.x > config.table_width {
+    } else if ball.position.x + radius > config.simple_input_data.table_width {
         collisions.push(Wall::Right)
     }
 
-    if ball.position.y < 0.0 {
+    if ball.position.y - radius < 0.0 {
         collisions.push(Wall::Bottom)
-    } else if ball.position.y > config.table_height {
+    } else if ball.position.y + radius > config.simple_input_data.table_height {
         collisions.push(Wall::Top)
     }
 
     collisions
 }
-*/
 
 fn calculate_force(b: &Ball, other: &Ball, radius_sum: Float) -> Vector2<Float> {
-    let k = 10e4 as Float;
+    let k = 10e10 as Float;
     let r_hat = (other.position - b.position).normalize();
     k * ((b.position - other.position).magnitude() - radius_sum) * r_hat
 }
@@ -199,33 +199,64 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
     }
 
     let delta_time = (10.0 as Float).powi(-(config.delta_time_n as i32));
+    let mut iteration = 0;
     dbg!(delta_time);
 
     while !stop_condition(&state, time) {
         let mut forces: HashMap<_, _> = state.iter().map(|(&k, _)| (k, Vector2::zeros())).collect();
 
+        let radius_sum = config.simple_input_data.ball_radius * 2.0;
         for (ball, other) in state.values().tuple_combinations() {
-            let force = calculate_force(ball, other, config.simple_input_data.ball_radius * 2.0);
-            *forces.get_mut(&ball.id).unwrap() += force;
-            *forces.get_mut(&other.id).unwrap() -= force;
+            if are_balls_colliding(ball, other, radius_sum) {
+                let force = calculate_force(ball, other, radius_sum);
+                *forces.get_mut(&ball.id).unwrap() += force;
+                *forces.get_mut(&other.id).unwrap() -= force;
+            }
         }
 
-        for (id, force) in forces {
-            let ball = state.get_mut(&id).unwrap();
+        for (id, ball) in state.iter_mut() {
+            let force = forces.get(id).cloned().unwrap_or_else(Vector2::zeros);
             let acceleration = force / config.simple_input_data.ball_mass;
             let (p, v) = euler_algorythm(ball.position, ball.velocity, acceleration, delta_time);
             ball.position = p;
             ball.velocity = v;
+
+            let walls = did_ball_go_outside(ball, &config);
+            for wall in walls {
+                match wall {
+                    Wall::Left => {
+                        ball.position.x = -ball.position.x + radius_sum;
+                        ball.velocity.x *= -1.0;
+                    }
+                    Wall::Right => {
+                        ball.position.x =
+                            2.0 * config.simple_input_data.table_width - radius_sum - ball.position.x;
+                        ball.velocity.x *= -1.0;
+                    }
+                    Wall::Bottom => {
+                        ball.position.y = -ball.position.y + radius_sum;
+                        ball.velocity.y *= -1.0;
+                    }
+                    Wall::Top => {
+                        ball.position.y =
+                            2.0 * config.simple_input_data.table_height - radius_sum - ball.position.y;
+                        ball.velocity.y *= -1.0;
+                    }
+                }
+            }
         }
 
         time += delta_time;
+        iteration += 1;
 
-        // Write to output
-        let frame = Frame {
-            time,
-            balls: state.values().copied().collect_vec(),
-        };
-        output_writer.write_fmt(format_args!("{frame}")).unwrap();
+        if iteration % 10000 == 0 {
+            // Write to output
+            let frame = Frame {
+                time,
+                balls: state.values().copied().collect_vec(),
+            };
+            output_writer.write_fmt(format_args!("{frame}")).unwrap();
+        }
     }
 }
 
