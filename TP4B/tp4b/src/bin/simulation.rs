@@ -1,7 +1,7 @@
 #![feature(let_chains)]
 
 use chumsky::{prelude::Input, Parser};
-use cim::particles::ID;
+use cim::{cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder, particles::ID};
 use std::{
     collections::{BTreeMap, HashMap},
     fs::{self, File},
@@ -200,15 +200,29 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
 
     let delta_time = (10.0 as Float).powi(-(config.delta_time_n as i32));
     let mut iteration = 0;
-    dbg!(delta_time);
 
     while !stop_condition(&state, time) {
         let mut forces: HashMap<_, _> = state.iter().map(|(&k, _)| (k, Vector2::zeros())).collect();
 
         let radius_sum = config.simple_input_data.ball_radius * 2.0;
-        for (ball, other) in state.values().tuple_combinations() {
-            if are_balls_colliding(ball, other, radius_sum) {
-                let force = calculate_force(ball, other, radius_sum);
+
+        let neighbors = CimNeighborFinder::find_neighbors(
+            &state.values().cloned().collect_vec(),
+            cim::cim_finder::SystemInfo {
+                cyclic: true,
+                interaction_radius: 0.0,
+                space_width: config.simple_input_data.table_width,
+                space_height: config.simple_input_data.table_height,
+                columns: (config.simple_input_data.table_width / radius_sum).ceil() as usize,
+                rows: (config.simple_input_data.table_height / radius_sum).ceil() as usize,
+            },
+        );
+
+        for (&id, ball) in &state {
+            let neighs = neighbors.get_neighbors(id);
+
+            for other in neighs.map(|id| state[id]) {
+                let force = calculate_force(ball, &other, radius_sum);
                 *forces.get_mut(&ball.id).unwrap() += force;
                 *forces.get_mut(&other.id).unwrap() -= force;
             }
@@ -229,8 +243,9 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
                         ball.velocity.x *= -1.0;
                     }
                     Wall::Right => {
-                        ball.position.x =
-                            2.0 * config.simple_input_data.table_width - radius_sum - ball.position.x;
+                        ball.position.x = 2.0 * config.simple_input_data.table_width
+                            - radius_sum
+                            - ball.position.x;
                         ball.velocity.x *= -1.0;
                     }
                     Wall::Bottom => {
@@ -238,8 +253,9 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
                         ball.velocity.y *= -1.0;
                     }
                     Wall::Top => {
-                        ball.position.y =
-                            2.0 * config.simple_input_data.table_height - radius_sum - ball.position.y;
+                        ball.position.y = 2.0 * config.simple_input_data.table_height
+                            - radius_sum
+                            - ball.position.y;
                         ball.velocity.y *= -1.0;
                     }
                 }
