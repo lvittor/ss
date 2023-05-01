@@ -10,16 +10,18 @@ pub trait CircularParticle: Clone + Copy {
         &self,
         other: &Self,
         radius: f64,
-        space_length: f64,
+        space_width: f64,
+        space_height: f64,
         cyclic: bool,
     ) -> bool {
-        let mut delta = (self.get_position() - other.get_position()).abs();
+        let mut delta = self.get_position() - other.get_position();
         if cyclic {
-            if delta.x > 0.5 * space_length {
-                delta.x = space_length - delta.x;
+            delta = delta.abs();
+            if delta.x > 0.5 * space_width {
+                delta.x = space_width - delta.x;
             }
-            if delta.y > 0.5 * space_length {
-                delta.y = space_length - delta.y;
+            if delta.y > 0.5 * space_height {
+                delta.y = space_height - delta.y;
             }
         }
         delta.magnitude_squared() <= (radius + self.get_radius() + other.get_radius()).powi(2)

@@ -6,9 +6,9 @@ use std::{
 
 use chumsky::Parser;
 use clap::Parser as _parser;
-use tp3::{
+use pool::{
     parser::{input_parser, output_parser},
-    particle::Frame,
+    models::Frame,
     Float,
 };
 

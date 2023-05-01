@@ -51,8 +51,10 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
             cim::cim_finder::SystemInfo {
                 cyclic: true,
                 interaction_radius: config.interaction_radius,
-                space_length: config.space_length,
-                grid_size: m,
+                space_width: config.space_length,
+                space_height: config.space_length,
+                columns: m,
+                rows: m,
             },
         );
 

@@ -1,7 +1,7 @@
 use std::io::{BufRead, Lines};
 
 use crate::{
-    particle::{Ball, Frame, InputData},
+    models::{Ball, Frame, InputData},
     Float,
 };
 use chumsky::{prelude::*, text::newline};
@@ -26,6 +26,7 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
             id,
             position: Vector2::new(x, y),
             velocity: Vector2::new(vx, vy),
+            radius: 0.0,
         });
 
     let balls = ball_data
@@ -48,10 +49,11 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
         .then_ignore(newline())
         .then(balls)
         .map(
-            |((table_width, table_height, hole_radius, ball_radius, ball_mass, _), balls): (
+            |((table_width, table_height, hole_radius, ball_radius, ball_mass, _), mut balls): (
                 _,
                 Vec<Ball>,
             )| {
+                balls.iter_mut().for_each(|b| b.radius = ball_radius);
                 InputData {
                     table_width,
                     table_height,
@@ -114,6 +116,7 @@ pub fn output_parser<B: BufRead>(file: Lines<B>) -> impl Iterator<Item = Frame> 
                     id,
                     position: Vector2::new(x, y),
                     velocity: Vector2::new(vx, vy),
+                    radius: 0.0,
                 }
             })
             .collect_vec();

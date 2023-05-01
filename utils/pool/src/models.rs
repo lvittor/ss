@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use cim::particles::ID;
+use cim::particles::{CircularParticle, ID};
 use nalgebra::Vector2;
 
 use crate::Float;
@@ -10,6 +10,21 @@ pub struct Ball {
     pub id: ID,
     pub position: Vector2<Float>,
     pub velocity: Vector2<Float>,
+    pub radius: Float,
+}
+
+impl CircularParticle for Ball {
+    fn get_id(&self) -> ID {
+        self.id
+    }
+
+    fn get_position(&self) -> Vector2<f64> {
+        self.position
+    }
+
+    fn get_radius(&self) -> f64 {
+        self.radius as f64
+    }
 }
 
 #[derive(Debug)]
