@@ -28,6 +28,9 @@ struct Args {
 
     #[arg(long)]
     capture_directory: Option<PathBuf>,
+
+    #[arg(short, long)]
+    no_holes: bool,
 }
 
 fn main() {
@@ -62,12 +65,16 @@ fn model(_app: &App, args: Args) -> Model {
 
     let frame_iter = Box::new(output_parser(BufReader::new(output_file).lines()));
 
-    let holes = Vec::from(HOLE_POSITIONS.map(|v| {
-        v.component_mul(&Vector2::new(
-            system_info.table_width,
-            system_info.table_height,
-        ))
-    }));
+    let holes = if args.no_holes {
+        Vec::with_capacity(0)
+    } else {
+        Vec::from(HOLE_POSITIONS.map(|v| {
+            v.component_mul(&Vector2::new(
+                system_info.table_width,
+                system_info.table_height,
+            ))
+        }))
+    };
 
     Model {
         frame: Frame {
@@ -87,5 +94,10 @@ fn update(_app: &App, model: &mut Model, _update: Update) {
 }
 
 fn draw(_app: &App, model: &Model, draw: &Draw) {
-    draw_pool(&model.system_info, model.frame.balls.iter().cloned(), &model.holes, draw);
+    draw_pool(
+        &model.system_info,
+        model.frame.balls.iter().cloned(),
+        &model.holes,
+        draw,
+    );
 }
