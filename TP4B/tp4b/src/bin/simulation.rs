@@ -54,6 +54,8 @@ enum Wall {
     Bottom,
 }
 
+const K: Float = 10e4;
+
 fn did_ball_go_outside(ball: &Ball, config: &InputData) -> Vec<Wall> {
     let mut collisions = Vec::with_capacity(2);
     let radius = config.simple_input_data.ball_radius;
@@ -74,9 +76,8 @@ fn did_ball_go_outside(ball: &Ball, config: &InputData) -> Vec<Wall> {
 }
 
 fn calculate_force(b: &Ball, other: &Ball, radius_sum: Float) -> Vector2<Float> {
-    let k = 10e10 as Float;
     let r_hat = (other.position - b.position).normalize();
-    k * ((b.position - other.position).magnitude() - radius_sum) * r_hat
+    K * ((b.position - other.position).magnitude() - radius_sum) * r_hat
 }
 
 /*
@@ -216,7 +217,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
             },
         );
 
-        /* 
+        /*
          * It's slower for normal ball count but faster for more balls
         let neighbors = CimNeighborFinder::find_neighbors(
             &state.values().cloned().collect_vec(),
@@ -239,6 +240,28 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
                 *forces.get_mut(&ball.id).unwrap() += force;
                 *forces.get_mut(&other.id).unwrap() -= force;
             }
+
+            let walls = did_ball_go_outside(ball, &config);
+            for wall in walls {
+                match wall {
+                    Wall::Left => {
+                        let depth = -(ball.position.x - ball.radius);
+                        forces.get_mut(&ball.id).unwrap().x += K * depth;
+                    }
+                    Wall::Right => {
+                        let depth = ball.position.x - config.simple_input_data.table_width + ball.radius;
+                        forces.get_mut(&ball.id).unwrap().x -= K * depth;
+                    }
+                    Wall::Bottom => {
+                        let depth = -(ball.position.y - ball.radius);
+                        forces.get_mut(&ball.id).unwrap().y += K * depth;
+                    }
+                    Wall::Top => {
+                        let depth = ball.position.y - config.simple_input_data.table_height + ball.radius;
+                        forces.get_mut(&ball.id).unwrap().y -= K * depth;
+                    }
+                }
+            }
         }
 
         for (id, ball) in state.iter_mut() {
@@ -247,32 +270,6 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
             let (p, v) = euler_algorythm(ball.position, ball.velocity, acceleration, delta_time);
             ball.position = p;
             ball.velocity = v;
-
-            let walls = did_ball_go_outside(ball, &config);
-            for wall in walls {
-                match wall {
-                    Wall::Left => {
-                        ball.position.x = -ball.position.x + radius_sum;
-                        ball.velocity.x *= -1.0;
-                    }
-                    Wall::Right => {
-                        ball.position.x = 2.0 * config.simple_input_data.table_width
-                            - radius_sum
-                            - ball.position.x;
-                        ball.velocity.x *= -1.0;
-                    }
-                    Wall::Bottom => {
-                        ball.position.y = -ball.position.y + radius_sum;
-                        ball.velocity.y *= -1.0;
-                    }
-                    Wall::Top => {
-                        ball.position.y = 2.0 * config.simple_input_data.table_height
-                            - radius_sum
-                            - ball.position.y;
-                        ball.velocity.y *= -1.0;
-                    }
-                }
-            }
         }
 
         time += delta_time;
