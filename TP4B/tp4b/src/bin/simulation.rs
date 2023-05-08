@@ -58,7 +58,7 @@ enum Wall {
     Bottom,
 }
 
-const K: Float = 10e4;
+const K: Float = 10e4 * 100.0;
 
 fn did_ball_go_outside(ball: &Ball, config: &InputData) -> Vec<Wall> {
     let mut collisions = Vec::with_capacity(2);
