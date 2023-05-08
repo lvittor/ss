@@ -19,7 +19,7 @@ build:
 
 run-with-vis: build
 	make -C .. -f Makefile.rust -s run-raw BIN=simulation \
-		ARGS="--input $(INPUT_FILE_PATH) $(if $(MAX_TIME),--max-duration $(MAX_TIME)) --delta-time-n=5" | \
+		ARGS="--input $(INPUT_FILE_PATH) $(if $(MAX_TIME),--max-duration $(MAX_TIME)) --delta-time-n=5 --output-every=1000" | \
 	make -C .. -f Makefile.rust run-raw BIN=visualization \
 		ARGS="--input $(INPUT_FILE_PATH) --output /dev/stdin --no-holes $(if $(CAPTURE_DIR),--capture-directory $(CAPTURE_DIR))"
 
