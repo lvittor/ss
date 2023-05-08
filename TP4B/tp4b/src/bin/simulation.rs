@@ -2,7 +2,7 @@
 
 use chumsky::Parser;
 use cim::{
-    cim_finder::CimNeighborFinder, neighbor_finder::NeighborFinder, particles::ID,
+    /*cim_finder::CimNeighborFinder, */ neighbor_finder::NeighborFinder, particles::ID,
     simple_finder::SimpleNeighborFinder,
 };
 use std::{
@@ -16,7 +16,7 @@ use nalgebra::Vector2;
 use pool::{
     models::{Ball, Frame, InputData as SimpleInputData},
     parser::input_parser,
-    Float, HOLE_POSITIONS,
+    Float,
 };
 
 use clap::Parser as _parser;
@@ -33,6 +33,9 @@ struct Args {
     #[arg(short, long)]
     delta_time_n: u16,
 
+    #[arg(long)]
+    output_every: u64,
+
     #[arg(short, long)]
     with_holes: bool,
 
@@ -42,6 +45,7 @@ struct Args {
 
 struct InputData {
     simple_input_data: SimpleInputData,
+    output_every: u64,
     delta_time_n: u16,
     with_holes: bool,
 }
@@ -249,7 +253,8 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
                         forces.get_mut(&ball.id).unwrap().x += K * depth;
                     }
                     Wall::Right => {
-                        let depth = ball.position.x - config.simple_input_data.table_width + ball.radius;
+                        let depth =
+                            ball.position.x - config.simple_input_data.table_width + ball.radius;
                         forces.get_mut(&ball.id).unwrap().x -= K * depth;
                     }
                     Wall::Bottom => {
@@ -257,7 +262,8 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
                         forces.get_mut(&ball.id).unwrap().y += K * depth;
                     }
                     Wall::Top => {
-                        let depth = ball.position.y - config.simple_input_data.table_height + ball.radius;
+                        let depth =
+                            ball.position.y - config.simple_input_data.table_height + ball.radius;
                         forces.get_mut(&ball.id).unwrap().y -= K * depth;
                     }
                 }
@@ -275,7 +281,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
         time += delta_time;
         iteration += 1;
 
-        if iteration % 10000 == 0 {
+        if iteration % config.output_every == 0 {
             // Write to output
             let frame = Frame {
                 time,
@@ -297,6 +303,7 @@ fn main() {
             .expect("Error parsing input data."),
         delta_time_n: args.delta_time_n,
         with_holes: args.with_holes,
+        output_every: args.output_every,
     };
 
     let writer = if let Some(output) = args.output {
