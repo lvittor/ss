@@ -105,10 +105,12 @@ fn draw(_app: &App, model: &Model, draw: &Draw) {
                  id,
                  position,
                  velocity,
+                 radius,
              }| Ball {
                 id,
                 position: position + velocity * (model.time - last_frame.time),
                 velocity,
+                radius,
             },
         ))
     } else {

@@ -11,8 +11,8 @@ use std::{
 use itertools::Itertools;
 use nalgebra::Vector2;
 use pool::{
-    parser::input_parser,
     models::{Ball, Frame, InputData},
+    parser::input_parser,
     Float, HOLE_POSITIONS,
 };
 
@@ -109,7 +109,8 @@ fn find_earliest_collision(
         if let Some(time) = find_collision_between_balls(ball, &Ball {
             id: 0,
             position: *hole,
-            velocity: Vector2::zeros()
+            velocity: Vector2::zeros(),
+            radius: 0.0,
         }, config.ball_radius + config.hole_radius)
             && earliest.map(|e| time < e.time).unwrap_or(true)
         {
