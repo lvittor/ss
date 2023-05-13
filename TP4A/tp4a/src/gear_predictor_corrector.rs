@@ -62,14 +62,12 @@ fn fitfh_order_gear_corrector_predictor_algorithm<F: FnOnce(f64, f64) -> f64>(
 pub(crate) fn gear_predictor_corrector<
     F: Fn(f64, f64) -> f64,
     F3: FnOnce(f64, f64) -> (f64, f64, f64, f64, f64, f64),
-    F2: Fn(f64) -> f64,
     Callback: CallbackFn,
 >(
     r: f64,
     v: f64,
     calculate_force: F,
     calculate_initial_integration: F3,
-    analytic_solution: F2,
     dt: f64,
     m: f64,
     mut callback: Callback,

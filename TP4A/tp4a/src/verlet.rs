@@ -8,11 +8,10 @@ fn verlet_algorithm(r: f64, prev_r: f64, m: f64, f: f64, dt: f64) -> (f64, f64) 
     (r_next, v_next)
 }
 
-pub(crate) fn verlet<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64, Callback: CallbackFn>(
+pub(crate) fn verlet<F: Fn(f64, f64) -> f64, Callback: CallbackFn>(
     r: f64,
     v: f64,
     calculate_force: F,
-    analytic_solution: F2,
     dt: f64,
     m: f64,
     mut callback: Callback,

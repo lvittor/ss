@@ -1,7 +1,5 @@
 #![feature(trait_alias)]
 
-use std::default;
-
 use crate::{beeman::beeman, gear_predictor_corrector::gear_predictor_corrector, verlet::verlet};
 use clap::{Parser, Subcommand};
 
@@ -19,11 +17,11 @@ pub fn euler_algorithm(r: f64, v: f64, f: f64, dt: f64, m: f64) -> (f64, f64) {
     (next_r, next_v)
 }
 
-fn analytic_solution(A: f64, gamma: f64, m: f64, t: f64, k: f64) -> f64 {
+fn analytic_solution(a: f64, gamma: f64, m: f64, t: f64, k: f64) -> f64 {
     let beta = gamma / (2.0 * m);
     let omega = ((k / m) - beta.powi(2)).sqrt();
 
-    A * (-beta * t).exp() * (omega * t).cos()
+    a * (-beta * t).exp() * (omega * t).cos()
 }
 
 pub(crate) fn analytic<F: Fn(f64) -> f64, Callback: CallbackFn>(
@@ -109,13 +107,12 @@ fn main() {
             V,
             calc_force,
             calc_initial_integration,
-            analytic_solution,
             DT,
             M,
             print_csv_row,
         ),
-        Method::Verlet => verlet(R, V, calc_force, analytic_solution, DT, M, print_csv_row),
-        Method::Beeman => beeman(R, V, calc_force, analytic_solution, DT, M, print_csv_row),
+        Method::Verlet => verlet(R, V, calc_force, DT, M, print_csv_row),
+        Method::Beeman => beeman(R, V, calc_force, DT, M, print_csv_row),
     }
 
     let mse = diff / steps as f64; // Mean Square Error

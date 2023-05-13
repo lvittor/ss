@@ -5,15 +5,14 @@ fn beeman_position(r: f64, v: f64, a: f64, prev_a: f64, dt: f64) -> f64 {
     r + v * dt + (2.0 / 3.0) * a * dt.powi(2) - (1.0 / 6.0) * prev_a * dt.powi(2)
 }
 
-fn beeman_velocity(r: f64, v: f64, a: f64, prev_a: f64, next_a: f64, dt: f64) -> f64 {
+fn beeman_velocity(v: f64, a: f64, prev_a: f64, next_a: f64, dt: f64) -> f64 {
     v + (1.0 / 3.0) * next_a * dt + (5.0 / 6.0) * a * dt + (1.0 / 6.0) * prev_a * dt
 }
 
-pub(crate) fn beeman<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64, Callback: CallbackFn>(
+pub(crate) fn beeman<F: Fn(f64, f64) -> f64, Callback: CallbackFn>(
     r: f64,
     v: f64,
     calculate_force: F,
-    analytic_solution: F2,
     dt: f64,
     m: f64,
     mut callback: Callback,
@@ -43,7 +42,7 @@ pub(crate) fn beeman<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64, Callback: Callb
 
         let next_a = (predicted_v - curr_v) / dt;
 
-        let next_v = beeman_velocity(curr_r, curr_v, curr_a, prev_a, next_a, dt);
+        let next_v = beeman_velocity(curr_v, curr_a, prev_a, next_a, dt);
 
         prev_a = curr_a;
         curr_r = next_r;
