@@ -69,8 +69,8 @@ fn main() {
     const R: f64 = 1.0; // r(t=0) = 1m
     const V: f64 = -A * GAMMA / (2.0 * M); // v(t=0) = -a * gamma / (2.0 * m)
 
-    const DT: f64 = 1e-6;
-    const OUTPUT_EVERY: usize = 10000;
+    const DT: f64 = 1e-5;
+    const OUTPUT_EVERY: usize = 2000;
 
     let calc_force = |r: f64, v: f64| -K * r - GAMMA * v;
     let calc_initial_integration = |r: f64, v: f64| {
