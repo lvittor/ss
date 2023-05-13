@@ -25,18 +25,25 @@ fn verlet_algorithm(
     (r_next, v_next)
 }
 
-fn beeman_algorithm(
+fn beeman_position(
+    r: f64,
+    v: f64, 
+    a: f64, 
+    prev_a: f64,
+    dt: f64
+) -> f64{
+    r + v * dt + (2.0 / 3.0) * a * dt.powi(2) - (1.0 / 6.0) * prev_a * dt.powi(2)
+}
+
+fn beeman_velocity(
     r: f64,
     v: f64, 
     a: f64, 
     prev_a: f64,
     next_a: f64,  
     dt: f64
-) -> (f64, f64){
-    let r_next = r + v * dt + (2.0 / 3.0) * a * dt.powi(2) - (1.0 / 6.0) * prev_a * dt.powi(2);
-    let v_next = v + (1.0 / 3.0) * next_a * dt + (5.0 / 6.0) * a * dt + (1.0 / 6.0) * prev_a * dt;
-
-    (r_next, v_next)
+) -> f64{
+    v + (1.0 / 3.0) * next_a * dt + (5.0 / 6.0) * a * dt + (1.0 / 6.0) * prev_a * dt
 }
 
 fn fitfh_order_gear_corrector_predictor_algorithm<F: FnOnce(f64, f64) -> f64>(
@@ -168,12 +175,21 @@ fn beeman<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64>(
         curr_f = calculate_force(curr_r, curr_v);
         let mut curr_a = curr_f / m;
 
-        let next_a = ;
+        let next_r = beeman_position(curr_r, curr_v, curr_a, prev_a, dt);
 
-        let (next_r, next_v) = beeman_algorithm(curr_r, curr_v, curr_a, prev_a, next_a, dt);
+        let predicted_v = curr_v + 1.5 * curr_a * dt - 0.5 * prev_a * dt;
+
+        let next_a = (predicted_v - curr_v) / dt;
+
+        let next_v = beeman_velocity(curr_r, curr_v, curr_a, prev_a, next_a, dt);
 
         t += dt;
         steps += 1;
+
+        prev_a = curr_a;
+        curr_a = next_a;
+        curr_r = next_r;
+        curr_v = next_v;
     }
 }
 
