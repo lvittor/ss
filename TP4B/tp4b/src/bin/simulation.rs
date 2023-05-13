@@ -160,7 +160,7 @@ fn apply_collision(state: &mut BTreeMap<ID, Ball>, config: &InputData, collision
 }
 */
 
-fn euler_algorythm(
+fn euler_algorithm(
     p: Vector2<Float>,
     v: Vector2<Float>,
     a: Vector2<Float>,
@@ -273,7 +273,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
         for (id, ball) in state.iter_mut() {
             let force = forces.get(id).cloned().unwrap_or_else(Vector2::zeros);
             let acceleration = force / config.simple_input_data.ball_mass;
-            let (p, v) = euler_algorythm(ball.position, ball.velocity, acceleration, delta_time);
+            let (p, v) = euler_algorithm(ball.position, ball.velocity, acceleration, delta_time);
             ball.position = p;
             ball.velocity = v;
         }
