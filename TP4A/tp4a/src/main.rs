@@ -139,14 +139,13 @@ fn verlet<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64>(
     println!("{}", mse);
 }
 
-fn beeman(
+fn beeman<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64>(
     r: f64, 
     v: f64, 
-    k: f64, 
-    gamma: f64, 
+    calculate_force: F,
+    analytic_solution: F2,
     dt: f64, 
     m: f64, 
-    A: f64
 ){
     let mut t = 0.0;
     let tf = 5.0;
@@ -154,22 +153,27 @@ fn beeman(
     let mut curr_r = r; // current position
     let mut curr_v = v; // current velocity
 
-    let mut curr_f = -k * curr_r - gamma * curr_v;
+    let mut curr_f = calculate_force(r, v);
     let (mut prev_r, mut prev_v): (f64, f64) = euler_algorithm(curr_r, curr_v, curr_f, -dt, m);
 
-    let prev_f = -k * prev_r - gamma * prev_v;
+    let prev_f = calculate_force(prev_r, prev_v);
     let prev_a = prev_f / m;
 
     let mut diff: f64 = 0.0;
     let mut steps = 0;
 
     while t < tf {
-        diff += ((analytic_solution(A, gamma, m, t, k) - curr_r) as f64).powi(2);
+        diff += ((analytic_solution(t) - curr_r) as f64).powi(2);
 
-        curr_f = -k * curr_r - gamma * curr_v;
+        curr_f = calculate_force(curr_r, curr_v);
         let mut curr_a = curr_f / m;
 
-        let (next_r, next_v) = beeman_algorithm(curr_r, curr_v, curr_a, prev_a, k, gamma, dt)
+        let next_a = ;
+
+        let (next_r, next_v) = beeman_algorithm(curr_r, curr_v, curr_a, prev_a, next_a, dt);
+
+        t += dt;
+        steps += 1;
     }
 }
 
