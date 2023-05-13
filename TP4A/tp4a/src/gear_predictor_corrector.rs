@@ -1,3 +1,5 @@
+use crate::CallbackFn;
+
 const fn fac(n: u64) -> u64 {
     match n {
         0u64 | 1u64 => 1,
@@ -57,10 +59,11 @@ fn fitfh_order_gear_corrector_predictor_algorithm<F: FnOnce(f64, f64) -> f64>(
     (rc, vc, ac, r3c, r4c, r5c)
 }
 
-pub fn gear_predictor_corrector<
+pub(crate) fn gear_predictor_corrector<
     F: Fn(f64, f64) -> f64,
     F3: FnOnce(f64, f64) -> (f64, f64, f64, f64, f64, f64),
     F2: Fn(f64) -> f64,
+    Callback: CallbackFn,
 >(
     r: f64,
     v: f64,
@@ -69,6 +72,7 @@ pub fn gear_predictor_corrector<
     analytic_solution: F2,
     dt: f64,
     m: f64,
+    mut callback: Callback,
 ) {
     let mut t = 0.0;
     let tf = 5.0;
@@ -95,8 +99,7 @@ pub fn gear_predictor_corrector<
                 &calculate_force,
             );
 
-        // write to file (next_r, next_v)
-        println!("{:.2} {:.4} {:.4}", t, curr_r, curr_v);
+        callback(t, curr_r, curr_v);
 
         t += dt;
         steps += 1;

@@ -1,8 +1,12 @@
+#![feature(trait_alias)]
+
 use crate::{beeman::beeman, verlet::verlet, gear_predictor_corrector::gear_predictor_corrector};
 
 mod verlet;
 mod beeman;
 mod gear_predictor_corrector;
+
+trait CallbackFn = FnMut(f64, f64, f64);
 
 pub fn euler_algorithm(r: f64, v: f64, f: f64, dt: f64, m: f64) -> (f64, f64) {
     let next_r = r + dt * v + (dt.powi(2) / (2.0 * m)) * f;
@@ -44,9 +48,15 @@ fn main() {
         (r, r1, r2, r3, r4, r5)
     };
 
+    let print_csv_row = |t: f64, r: f64, v: f64| {
+        println!("{t:.2},{r:.4},{v:.4}");
+    };
+
     let analytic_solution = |t: f64| analytic_solution(A, GAMMA, M, t, K);
 
-    //verlet(R, V, calc_force, analytic_solution, DT, M);
-    //beeman(R, V, calc_force, analytic_solution, DT, M);
-    gear_predictor_corrector(R, V, calc_force, calc_initial_integration, analytic_solution, DT, M);
+    println!("t,r,v");
+
+    //verlet(R, V, calc_force, analytic_solution, DT, M, print_csv_row);
+    //beeman(R, V, calc_force, analytic_solution, DT, M, print_csv_row);
+    gear_predictor_corrector(R, V, calc_force, calc_initial_integration, analytic_solution, DT, M, print_csv_row);
 }

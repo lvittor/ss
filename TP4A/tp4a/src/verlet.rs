@@ -1,5 +1,5 @@
 use crate::euler_algorithm;
-
+use crate::CallbackFn;
 
 fn verlet_algorithm(r: f64, prev_r: f64, m: f64, f: f64, dt: f64) -> (f64, f64) {
     let r_next = 2.0 * r - prev_r + (f / m) * dt.powi(2);
@@ -8,13 +8,14 @@ fn verlet_algorithm(r: f64, prev_r: f64, m: f64, f: f64, dt: f64) -> (f64, f64) 
     (r_next, v_next)
 }
 
-pub fn verlet<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64>(
+pub(crate) fn verlet<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64, Callback: CallbackFn>(
     r: f64,
     v: f64,
     calculate_force: F,
     analytic_solution: F2,
     dt: f64,
     m: f64,
+    mut callback: Callback,
 ) {
     let mut t = 0.0;
     let tf = 5.0;
@@ -35,8 +36,7 @@ pub fn verlet<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64>(
 
         let (next_r, next_v) = verlet_algorithm(curr_r, prev_r, m, f, dt);
 
-        // write to file (next_r, next_v)
-        println!("{:.2} {:.4} {:.4}", t, next_r, next_v);
+        callback(t, curr_r, curr_v);
 
         prev_r = curr_r;
 
@@ -51,4 +51,3 @@ pub fn verlet<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64>(
     let mse = diff / steps as f64; // Mean Square Error
     println!("{}", mse);
 }
-
