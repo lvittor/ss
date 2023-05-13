@@ -69,7 +69,8 @@ fn main() {
     const R: f64 = 1.0; // r(t=0) = 1m
     const V: f64 = -A * GAMMA / (2.0 * M); // v(t=0) = -a * gamma / (2.0 * m)
 
-    const DT: f64 = 1e-5;
+    const DT: f64 = 1e-6;
+    const OUTPUT_EVERY: usize = 10000;
 
     let calc_force = |r: f64, v: f64| -K * r - GAMMA * v;
     let calc_initial_integration = |r: f64, v: f64| {
@@ -90,8 +91,8 @@ fn main() {
     let print_csv_row = |t: f64, r: f64, v: f64| {
         diff += (analytic_solution(t) - r).powi(2);
 
-        // print every 100 steps
-        if steps % 1000 == 0 {
+        // print every OUTPUT_EVERY steps
+        if steps % OUTPUT_EVERY == 0 {
             println!("{t:.4},{r},{v}");
         }
 
