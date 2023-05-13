@@ -23,20 +23,16 @@ pub(crate) fn verlet<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64, Callback: Callb
     let mut f = calculate_force(r, v);
     let (mut prev_r, _): (f64, f64) = euler_algorithm(r, v, f, -dt, m);
 
-    let mut diff: f64 = 0.0;
-    let mut steps = 0;
-
     let mut curr_r = r; // current position
     let mut curr_v = v; // current velocity
 
+
     while t < tf {
-        diff += (analytic_solution(t) - curr_r).powi(2);
+        callback(t, curr_r, curr_v);
 
         f = calculate_force(curr_r, curr_v);
 
         let (next_r, next_v) = verlet_algorithm(curr_r, prev_r, m, f, dt);
-
-        callback(t, curr_r, curr_v);
 
         prev_r = curr_r;
 
@@ -44,10 +40,7 @@ pub(crate) fn verlet<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64, Callback: Callb
         curr_v = next_v;
 
         t += dt;
-        steps += 1;
     }
 
-    diff += (analytic_solution(t) - curr_r).powi(2);
-    let mse = diff / steps as f64; // Mean Square Error
-    println!("{}", mse);
+    callback(t, curr_r, curr_v);
 }

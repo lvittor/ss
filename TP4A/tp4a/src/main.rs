@@ -1,10 +1,13 @@
 #![feature(trait_alias)]
 
-use crate::{beeman::beeman, verlet::verlet, gear_predictor_corrector::gear_predictor_corrector};
+use std::default;
 
-mod verlet;
+use crate::{beeman::beeman, gear_predictor_corrector::gear_predictor_corrector, verlet::verlet};
+use clap::{Parser, Subcommand};
+
 mod beeman;
 mod gear_predictor_corrector;
+mod verlet;
 
 trait CallbackFn = FnMut(f64, f64, f64);
 
@@ -23,7 +26,41 @@ fn analytic_solution(A: f64, gamma: f64, m: f64, t: f64, k: f64) -> f64 {
     A * (-beta * t).exp() * (omega * t).cos()
 }
 
+pub(crate) fn analytic<F: Fn(f64) -> f64, Callback: CallbackFn>(
+    analytic_solution: F,
+    dt: f64,
+    mut callback: Callback,
+) {
+    let mut t = 0.0;
+    let tf = 5.0;
+
+    while t < tf {
+        let curr_r = analytic_solution(t);
+        callback(t, curr_r, 0.0);
+        t += dt;
+    }
+
+    callback(t, analytic_solution(t), 0.0);
+}
+
+#[derive(Subcommand, Default, Debug, Clone)]
+enum Method {
+    #[default]
+    Analytic,
+    Gear,
+    Verlet,
+    Beeman,
+}
+
+#[derive(Parser)]
+struct Args {
+    #[clap(subcommand)]
+    method: Method,
+}
+
 fn main() {
+    let args = Args::parse();
+
     // Constants
     const M: f64 = 70.0; // m = 70 kg
     const K: f64 = 1e4; // k = 10^4 N/m
@@ -48,15 +85,39 @@ fn main() {
         (r, r1, r2, r3, r4, r5)
     };
 
-    let print_csv_row = |t: f64, r: f64, v: f64| {
-        println!("{t:.2},{r:.4},{v:.4}");
-    };
-
     let analytic_solution = |t: f64| analytic_solution(A, GAMMA, M, t, K);
+
+    let mut diff = 0.0;
+    let mut steps = 0;
+    let print_csv_row = |t: f64, r: f64, v: f64| {
+        diff += (analytic_solution(t) - r).powi(2);
+
+        // print every 100 steps
+        if steps % 1000 == 0 {
+            println!("{t:.4},{r},{v}");
+        }
+
+        steps += 1;
+    };
 
     println!("t,r,v");
 
-    //verlet(R, V, calc_force, analytic_solution, DT, M, print_csv_row);
-    //beeman(R, V, calc_force, analytic_solution, DT, M, print_csv_row);
-    gear_predictor_corrector(R, V, calc_force, calc_initial_integration, analytic_solution, DT, M, print_csv_row);
+    match args.method {
+        Method::Analytic => analytic(analytic_solution, DT, print_csv_row),
+        Method::Gear => gear_predictor_corrector(
+            R,
+            V,
+            calc_force,
+            calc_initial_integration,
+            analytic_solution,
+            DT,
+            M,
+            print_csv_row,
+        ),
+        Method::Verlet => verlet(R, V, calc_force, analytic_solution, DT, M, print_csv_row),
+        Method::Beeman => beeman(R, V, calc_force, analytic_solution, DT, M, print_csv_row),
+    }
+
+    let mse = diff / steps as f64; // Mean Square Error
+    eprintln!("{}", mse);
 }

@@ -80,11 +80,8 @@ pub(crate) fn gear_predictor_corrector<
     let (mut curr_r, mut curr_v, mut curr_a, mut curr_r3, mut curr_r4, mut curr_r5) =
         calculate_initial_integration(r, v);
 
-    let mut diff: f64 = 0.0;
-    let mut steps = 0;
-
     while t < tf {
-        diff += (analytic_solution(t) - curr_r).powi(2);
+        callback(t, curr_r, curr_v);
 
         (curr_r, curr_v, curr_a, curr_r3, curr_r4, curr_r5) =
             fitfh_order_gear_corrector_predictor_algorithm(
@@ -99,13 +96,8 @@ pub(crate) fn gear_predictor_corrector<
                 &calculate_force,
             );
 
-        callback(t, curr_r, curr_v);
-
         t += dt;
-        steps += 1;
     }
 
-    diff += (analytic_solution(t) - curr_r).powi(2);
-    let mse = diff / steps as f64; // Mean Square Error
-    println!("{}", mse);
+    callback(t, curr_r, curr_v);
 }

@@ -30,11 +30,9 @@ pub(crate) fn beeman<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64, Callback: Callb
     let prev_f = calculate_force(prev_r, prev_v);
     let mut prev_a = prev_f / m;
 
-    let mut diff: f64 = 0.0;
-    let mut steps = 0;
 
     while t < tf {
-        diff += (analytic_solution(t) - curr_r).powi(2);
+        callback(t, curr_r, curr_v);
 
         curr_f = calculate_force(curr_r, curr_v);
         let curr_a = curr_f / m;
@@ -47,17 +45,12 @@ pub(crate) fn beeman<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64, Callback: Callb
 
         let next_v = beeman_velocity(curr_r, curr_v, curr_a, prev_a, next_a, dt);
 
-        callback(t, next_r, next_v);
-
         prev_a = curr_a;
         curr_r = next_r;
         curr_v = next_v;
 
         t += dt;
-        steps += 1;
     }
 
-    diff += (analytic_solution(t) - curr_r).powi(2);
-    let mse = diff / steps as f64; // Mean Square Error
-    println!("{}", mse);
+    callback(t, curr_r, curr_v);
 }
