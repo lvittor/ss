@@ -33,8 +33,8 @@ fn beeman_algorithm(
     next_a: f64,  
     dt: f64
 ) -> (f64, f64){
-    let r_next = r + v * dt + (2.0 / 3) * a * dt.powi(2) - (1.0 / 6) * prev_a * dt.powi(2);
-    let v_next = v + (1.0 / 3) * next_a * dt + (5.0 / 6) * a * dt + (1.0 / 6) * prev_a * dt;
+    let r_next = r + v * dt + (2.0 / 3.0) * a * dt.powi(2) - (1.0 / 6.0) * prev_a * dt.powi(2);
+    let v_next = v + (1.0 / 3.0) * next_a * dt + (5.0 / 6.0) * a * dt + (1.0 / 6.0) * prev_a * dt;
 
     (r_next, v_next)
 }
@@ -66,13 +66,13 @@ fn fitfh_order_gear_corrector_predictor_algorithm(
     let dr2 = da * dt.powi(2) / fac(2); // delta r2
 
     // Calculate the corrections
-    let rc = rp + (3.0 / 16) * dr2;
-    let vc = r1p + (251.0 / 360) * dr2 / dt;
+    let rc = rp + (3.0 / 16.0) * dr2;
+    let vc = r1p + (251.0 / 360.0) * dr2 / dt;
     let ac = r2p + (1.0) * dr2 * fac(2) / dt.powi(2);
     
-    let r3c = r3p + (11.0 / 18) * dr2 * fac(3) / dt.powi(3);
-    let r4c = r4p + (1.0 / 6) * dr2 * fac(4) / dt.powi(4);
-    let r5c = r5p + (1.0 / 60) * dr2 * fac(5) / dt.powi(5);
+    let r3c = r3p + (11.0 / 18.0) * dr2 * fac(3) / dt.powi(3);
+    let r4c = r4p + (1.0 / 6.0) * dr2 * fac(4) / dt.powi(4);
+    let r5c = r5p + (1.0 / 60.0) * dr2 * fac(5) / dt.powi(5);
 
     (rc, vc, ac, r3c, r4c, r5c)
 }
@@ -107,7 +107,7 @@ fn verlet(
     let tf = 5.0;
 
     let mut f = -k * r - gamma * v;
-    let mut (prev_r, _): (f64, f64) = euler_algorithm(r, v, f, -dt, m);
+    let (mut prev_r, _): (f64, f64) = euler_algorithm(r, v, f, -dt, m);
 
     let mut diff: f64 = 0.0;
     let mut steps = 0;
@@ -155,7 +155,7 @@ fn beeman(
     let mut curr_v = v; // current velocity
 
     let mut curr_f = -k * curr_r - gamma * curr_v;
-    let mut (prev_r, prev_v): (f64, f64) = euler_algorithm(curr_r, curr_v, current_f, -dt, m);
+    let (mut prev_r, mut prev_v): (f64, f64) = euler_algorithm(curr_r, curr_v, curr_f, -dt, m);
 
     let prev_f = -k * prev_r - gamma * prev_v;
     let prev_a = prev_f / m;
