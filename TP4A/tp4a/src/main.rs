@@ -39,7 +39,7 @@ fn beeman_algorithm(
     (r_next, v_next)
 }
 
-fn fitfh_order_gear_corrector_predictor_algorithm(
+fn fitfh_order_gear_corrector_predictor_algorithm<F: FnOnce(f64, f64) -> f64>(
     r: f64,
     v: f64,
     a: f64, 
@@ -47,7 +47,8 @@ fn fitfh_order_gear_corrector_predictor_algorithm(
     r4: f64, 
     r5: f64, 
     dt: f64, 
-    m: f64, 
+    m: f64,
+    calculate_force: F
 ) -> (f64, f64, f64, f64, f64, f64){
     // Calculate the predictions
     let r1 = v;
@@ -61,8 +62,7 @@ fn fitfh_order_gear_corrector_predictor_algorithm(
     let r5p = r5;
 
     // Calculate the deltas
-
-    let da = (-k * rp - gamma *  r1p) / m - r2p; // TODO: validate if this (delta a) is calculated correctly
+    let da = calculate_force(rp, r1p) / m - r2p; // TODO: validate if this (delta a) is calculated correctly
     let dr2 = da * dt.powi(2) / fac(2); // delta r2
 
     // Calculate the corrections
@@ -94,19 +94,19 @@ fn analytic_solution(
     A * (-beta * t).exp() * (omega * t).cos()
 }
 
-fn verlet(
+fn verlet<F: Fn(f64, f64) -> f64, F2: Fn(f64) -> f64>(
     r: f64, 
     v: f64, 
     k: f64, 
-    gamma: f64, 
+    calculate_force: F,
+    analytic_solution: F2,
     dt: f64, 
     m: f64, 
-    A: f64
 ){
     let mut t = 0.0;
     let tf = 5.0;
 
-    let mut f = -k * r - gamma * v;
+    let mut f = calculate_force(r, v);
     let (mut prev_r, _): (f64, f64) = euler_algorithm(r, v, f, -dt, m);
 
     let mut diff: f64 = 0.0;
@@ -116,9 +116,9 @@ fn verlet(
     let mut curr_v = v; // current velocity
 
     while t < tf {
-        diff += ((analytic_solution(A, gamma, m, t, k) - curr_r) as f64).powi(2);
+        diff += ((analytic_solution(t) - curr_r) as f64).powi(2);
 
-        f = -k * curr_r - gamma * curr_v;
+        f = calculate_force(curr_r, curr_v);
 
         let (next_r, next_v) = verlet_algorithm(curr_r, prev_r, m, f, dt);
         
@@ -134,7 +134,7 @@ fn verlet(
         steps += 1;
     }
 
-    diff += ((analytic_solution(A, gamma, m, t, k) - curr_r) as f64).powi(2);
+    diff += ((analytic_solution(t) - curr_r) as f64).powi(2);
     let mse = diff / steps as f64; // Mean Square Error
     println!("{}", mse);
 }
@@ -183,6 +183,17 @@ fn main() {
     // Initial Conditions
     const r: f64 = 1.0; // r(t=0) = 1m
     const v: f64 = -A * gamma / (2.0 * m);  // v(t=0) = -a * gamma / (2.0 * m)
+    
+    const dt: f64 = 1e-5;
 
-    verlet(r, v, k, gamma, dt, m, A);
+    let calc_force = |r, v| {
+        -k * r - gamma *  v
+    };
+
+    let analytic_solution = |t| {
+        analytic_solution( A, gamma, m, t, k)
+    };
+
+    verlet(r, v, k, calc_force, analytic_solution, dt, m, A);
+    //fitfh_order_gear_corrector_predictor_algorithm(r, v, 0.0, 0.0, 0.0, 0.0, dt, calc_force);
 }
