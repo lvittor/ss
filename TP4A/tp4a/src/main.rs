@@ -38,38 +38,46 @@ fn fitfh_order_gear_corrector_predictor_algorithm<F: FnOnce(f64, f64) -> f64>(
 
     let rp = r
         + r1 * dt
-        + r2 * dt.powi(2) / fac(2)
-        + r3 * dt.powi(3) / fac(3)
-        + r4 * dt.powi(4) / fac(4)
-        + r5 * dt.powi(5) / fac(5);
+        + r2 * dt.powi(2) / fac_f64(2)
+        + r3 * dt.powi(3) / fac_f64(3)
+        + r4 * dt.powi(4) / fac_f64(4)
+        + r5 * dt.powi(5) / fac_f64(5);
     let r1p = r1
         + r2 * dt
-        + r3 * dt.powi(2) / fac(2)
-        + r4 * dt.powi(3) / fac(3)
-        + r5 * dt.powi(4) / fac(4);
-    let r2p = r2 + r3 * dt + r4 * dt.powi(2) / fac(2) + r5 * dt.powi(3) / fac(3);
-    let r3p = r3 + r4 * dt + r5 * dt.powi(2) / fac(2);
+        + r3 * dt.powi(2) / fac_f64(2)
+        + r4 * dt.powi(3) / fac_f64(3)
+        + r5 * dt.powi(4) / fac_f64(4);
+    let r2p = r2 + r3 * dt + r4 * dt.powi(2) / fac_f64(2) + r5 * dt.powi(3) / fac_f64(3);
+    let r3p = r3 + r4 * dt + r5 * dt.powi(2) / fac_f64(2);
     let r4p = r4 + r5 * dt;
     let r5p = r5;
 
     // Calculate the deltas
     let da = calculate_force(rp, r1p) / m - r2p; // TODO: validate if this (delta a) is calculated correctly
-    let dr2 = da * dt.powi(2) / fac(2); // delta r2
+    let dr2 = da * dt.powi(2) / fac_f64(2); // delta r2
 
     // Calculate the corrections
     let rc = rp + (3.0 / 16.0) * dr2;
     let vc = r1p + (251.0 / 360.0) * dr2 / dt;
-    let ac = r2p + (1.0) * dr2 * fac(2) / dt.powi(2);
+    let ac = r2p + (1.0) * dr2 * fac_f64(2) / dt.powi(2);
 
-    let r3c = r3p + (11.0 / 18.0) * dr2 * fac(3) / dt.powi(3);
-    let r4c = r4p + (1.0 / 6.0) * dr2 * fac(4) / dt.powi(4);
-    let r5c = r5p + (1.0 / 60.0) * dr2 * fac(5) / dt.powi(5);
+    let r3c = r3p + (11.0 / 18.0) * dr2 * fac_f64(3) / dt.powi(3);
+    let r4c = r4p + (1.0 / 6.0) * dr2 * fac_f64(4) / dt.powi(4);
+    let r5c = r5p + (1.0 / 60.0) * dr2 * fac_f64(5) / dt.powi(5);
 
     (rc, vc, ac, r3c, r4c, r5c)
 }
 
-fn fac(n: i32) -> f64 {
-    (1..=n).fold(1.0, |acc, x| acc * x as f64)
+const fn fac(n: u64) -> u64 {
+    match n {
+        0u64 | 1u64 => 1,
+        2u64..=20u64 => fac(n - 1u64) * n,
+        _ => 0,
+    }
+}
+
+const fn fac_f64(n: u64) -> f64 {
+    fac(n) as f64
 }
 
 fn analytic_solution(A: f64, gamma: f64, m: f64, t: f64, k: f64) -> f64 {
