@@ -193,7 +193,7 @@ fn main() {
 
     let analytic_solution = |t: f64| analytic_solution(A, GAMMA, M, t, K);
 
-    //verlet(r, v, calc_force, analytic_solution, dt, m);
+    //verlet(R, V, calc_force, analytic_solution, DT, M);
     beeman(R, V, calc_force, analytic_solution, DT, M);
     //fitfh_order_gear_corrector_predictor_algorithm(r, v, 0.0, 0.0, 0.0, 0.0, dt, calc_force);
 }
