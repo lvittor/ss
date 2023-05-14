@@ -5,7 +5,7 @@ use cim::{
     /*cim_finder::CimNeighborFinder, */ neighbor_finder::NeighborFinder, particles::ID,
     simple_finder::SimpleNeighborFinder,
 };
-use tp4b::gear::GearPredictor;
+use gear_predictor_corrector::GearPredictor;
 use std::{
     collections::{BTreeMap, HashMap},
     fs::{self, File},
@@ -83,6 +83,30 @@ fn did_ball_go_outside(ball: &Ball, config: &InputData) -> Vec<Wall> {
 fn calculate_force(b: &Ball, other: &Ball, radius_sum: Float) -> Vector2<Float> {
     let r_hat = (other.position - b.position).normalize();
     K * ((b.position - other.position).magnitude() - radius_sum) * r_hat
+}
+
+trait PredictorFromBall: Sized {
+    fn from_ball(
+        ball: &Ball,
+        r2: Vector2<f64>,
+        r3: Vector2<f64>,
+        r4: Vector2<f64>,
+        r5: Vector2<f64>,
+    ) -> Self;
+}
+
+impl PredictorFromBall for GearPredictor<Vector2<f64>> {
+    fn from_ball(
+        ball: &Ball,
+        r2: Vector2<f64>,
+        r3: Vector2<f64>,
+        r4: Vector2<f64>,
+        r5: Vector2<f64>,
+    ) -> Self {
+        Self {
+            rs: [ball.position, ball.velocity, r2, r3, r4, r5],
+        }
+    }
 }
 
 /*

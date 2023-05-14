@@ -1,8 +1,5 @@
 use std::ops::{Add, Div, Mul, Sub};
 
-use nalgebra::Vector2;
-use pool::models::Ball;
-
 const fn fac(n: u64) -> u64 {
     match n {
         0u64 | 1u64 => 1,
@@ -16,25 +13,11 @@ const fn fac_f64(n: u64) -> f64 {
 }
 
 pub struct GearPredictor<T> {
-    rs: [T; 6],
+    pub rs: [T; 6],
 }
 
 pub struct GearCorrector<T> {
     pub predictions: [T; 6],
-}
-
-impl GearPredictor<Vector2<f64>> {
-    pub fn from_ball(
-        ball: &Ball,
-        r2: Vector2<f64>,
-        r3: Vector2<f64>,
-        r4: Vector2<f64>,
-        r5: Vector2<f64>,
-    ) -> Self {
-        Self {
-            rs: [ball.position, ball.velocity, r2, r3, r4, r5],
-        }
-    }
 }
 
 impl<T: Copy + Sub<T, Output = T> + Add<T, Output = T> + Div<f64, Output = T> + Mul<f64, Output = T>>
