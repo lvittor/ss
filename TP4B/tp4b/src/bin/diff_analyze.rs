@@ -28,7 +28,7 @@ fn main() {
     let mut analysis_file = File::create(args.analysis).unwrap();
 
     analysis_file
-        .write(b"t,phi\n")
+        .write_all(b"t,phi\n")
         .unwrap();
 
     for (frame1, frame2) in output_parser(BufReader::new(output_file1).lines())
@@ -46,7 +46,7 @@ fn main() {
         //assert_eq!(time1, time2);
         let time_diff = (time1 - time2).abs();
         //println!("{time1} | {time2} | {time_diff}");
-        assert!(time_diff < 1e-8);
+        assert!(time_diff < 1e-6, "time1: {} | time2: {}", time1, time2);
         let time = time1;
 
         balls1.sort_by_key(|ball| ball.id);

@@ -255,7 +255,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
             *higher_order = [r2, r3, r4, r5];
         }
 
-        time += delta_time;
+        time = iteration as f64 * delta_time;
         iteration += 1;
 
         if iteration % config.output_every == 0 {
