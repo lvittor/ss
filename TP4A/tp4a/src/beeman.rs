@@ -6,7 +6,7 @@ fn beeman_position(r: f64, v: f64, a: f64, prev_a: f64, dt: f64) -> f64 {
 }
 
 fn beeman_velocity(v: f64, a: f64, prev_a: f64, next_a: f64, dt: f64) -> f64 {
-    v + (1.0 / 3.0) * next_a * dt + (5.0 / 6.0) * a * dt + (1.0 / 6.0) * prev_a * dt
+    v + (1.0 / 3.0) * next_a * dt + (5.0 / 6.0) * a * dt - (1.0 / 6.0) * prev_a * dt
 }
 
 pub(crate) fn beeman<F: Fn(f64, f64) -> f64, Callback: CallbackFn>(
