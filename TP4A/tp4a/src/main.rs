@@ -54,6 +54,9 @@ enum Method {
 struct Args {
     #[clap(subcommand)]
     method: Method,
+
+    #[clap(long)]
+    delta_t_exponent: i32,
 }
 
 fn main() {
@@ -69,8 +72,8 @@ fn main() {
     const R: f64 = 1.0; // r(t=0) = 1m
     const V: f64 = -A * GAMMA / (2.0 * M); // v(t=0) = -a * gamma / (2.0 * m)
 
-    const DT: f64 = 1e-5;
-    const OUTPUT_EVERY: usize = 2000;
+    let dt = 10f64.powi(-args.delta_t_exponent);
+    let output_every: usize = (0.02 / dt) as usize;
 
     let calc_force = |r: f64, v: f64| -K * r - GAMMA * v;
     let calc_initial_integration = |r: f64, v: f64| {
@@ -92,7 +95,7 @@ fn main() {
         diff += (analytic_solution(t) - r).powi(2);
 
         // print every OUTPUT_EVERY steps
-        if steps % OUTPUT_EVERY == 0 {
+        if steps % output_every == 0 {
             println!("{t:.4},{r},{v}");
         }
 
@@ -102,18 +105,18 @@ fn main() {
     println!("t,r,v");
 
     match args.method {
-        Method::Analytic => analytic(analytic_solution, DT, print_csv_row),
+        Method::Analytic => analytic(analytic_solution, dt, print_csv_row),
         Method::Gear => gear_predictor_corrector(
             R,
             V,
             calc_force,
             calc_initial_integration,
-            DT,
+            dt,
             M,
             print_csv_row,
         ),
-        Method::Verlet => verlet(R, V, calc_force, DT, M, print_csv_row),
-        Method::Beeman => beeman(R, V, calc_force, DT, M, print_csv_row),
+        Method::Verlet => verlet(R, V, calc_force, dt, M, print_csv_row),
+        Method::Beeman => beeman(R, V, calc_force, dt, M, print_csv_row),
     }
 
     let mse = diff / steps as f64; // Mean Square Error
