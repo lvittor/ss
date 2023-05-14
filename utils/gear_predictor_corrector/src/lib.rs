@@ -20,8 +20,13 @@ pub struct GearCorrector<T> {
     pub predictions: [T; 6],
 }
 
-impl<T: Copy + Sub<T, Output = T> + Add<T, Output = T> + Div<f64, Output = T> + Mul<f64, Output = T>>
-    GearPredictor<T>
+impl<
+        T: Copy
+            + Sub<T, Output = T>
+            + Add<T, Output = T>
+            + Div<f64, Output = T>
+            + Mul<f64, Output = T>,
+    > GearPredictor<T>
 {
     pub fn predict(self, dt: f64) -> GearCorrector<T> {
         let [r, r1, r2, r3, r4, r5] = self.rs;
@@ -46,8 +51,13 @@ impl<T: Copy + Sub<T, Output = T> + Add<T, Output = T> + Div<f64, Output = T> + 
     }
 }
 
-impl<T: Copy + Sub<T, Output = T> + Add<T, Output = T> + Div<f64, Output = T> + Mul<f64, Output = T>>
-    GearCorrector<T>
+impl<
+        T: Copy
+            + Sub<T, Output = T>
+            + Add<T, Output = T>
+            + Div<f64, Output = T>
+            + Mul<f64, Output = T>,
+    > GearCorrector<T>
 where
     f64: Mul<T, Output = T>,
 {

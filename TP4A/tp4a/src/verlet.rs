@@ -25,7 +25,6 @@ pub(crate) fn verlet<F: Fn(f64, f64) -> f64, Callback: CallbackFn>(
     let mut curr_r = r; // current position
     let mut curr_v = v; // current velocity
 
-
     while t < tf {
         callback(t, curr_r, curr_v);
 
