@@ -5,7 +5,7 @@ use cim::{
     /*cim_finder::CimNeighborFinder, */ neighbor_finder::NeighborFinder, particles::ID,
     simple_finder::SimpleNeighborFinder,
 };
-use gear_predictor_corrector::GearPredictor;
+use gear_predictor_corrector::{GearCorrector, GearPredictor};
 use std::{
     collections::{BTreeMap, HashMap},
     fs::{self, File},
@@ -192,18 +192,31 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
 
         let mut forces: HashMap<_, _> = state.iter().map(|(&k, _)| (k, Vector2::zeros())).collect();
 
-        for (&id, (ball, _)) in &state {
+        let get_predicted_ball = |corrector: &GearCorrector<_>, original_ball: &Ball| {
+            let &Ball { id, radius, .. } = original_ball;
+            let &GearCorrector {
+                predictions: [position, velocity, ..],
+            } = corrector;
+            Ball {
+                id,
+                radius,
+                position,
+                velocity,
+            }
+        };
+
+        for (id, ball) in predictions.iter().map(|(&id, corrector)| (id, get_predicted_ball(corrector, &state[&id].0))) {
             let neighs = neighbors.get_neighbors(id);
 
-            for other in neighs.map(|id| state[id].0) {
+            for other in neighs.map(|id| get_predicted_ball(&predictions[id], &state[id].0)) {
                 if id > other.id {
-                    let force = calculate_force(ball, &other, radius_sum);
+                    let force = calculate_force(&ball, &other, radius_sum);
                     *forces.get_mut(&ball.id).unwrap() += force;
                     *forces.get_mut(&other.id).unwrap() -= force;
                 }
             }
 
-            let walls = did_ball_go_outside(ball, &config);
+            let walls = did_ball_go_outside(&ball, &config);
             for wall in walls {
                 match wall {
                     Wall::Left => {
@@ -231,7 +244,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
         for (id, (ball, higher_order)) in state.iter_mut() {
             let force = forces.get(id).cloned().unwrap_or_else(Vector2::zeros);
             let acceleration = force / config.simple_input_data.ball_mass;
-            let [p, v, r2, r3, r4, r5] = predictions[&id].correct(acceleration, delta_time);
+            let [p, v, r2, r3, r4, r5] = predictions[id].correct(acceleration, delta_time);
             ball.position = p;
             ball.velocity = v;
             *higher_order = [r2, r3, r4, r5];
