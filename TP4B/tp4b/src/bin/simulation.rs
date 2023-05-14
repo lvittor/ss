@@ -132,13 +132,13 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
         });
     }
 
-        // Write to output
-        IterableFrame {
-            time,
-            balls: state.values().map(|(b, _)| b),
-        }
-        .write_to(&mut output_writer)
-        .unwrap();
+    // Write to output
+    IterableFrame {
+        time,
+        balls: state.values().map(|(b, _)| b),
+    }
+    .write_to(&mut output_writer)
+    .unwrap();
 
     let delta_time = (10.0 as Float).powi(-(config.delta_time_n as i32));
     let mut iteration = 0;

@@ -27,9 +27,7 @@ fn main() {
 
     let mut analysis_file = File::create(args.analysis).unwrap();
 
-    analysis_file
-        .write_all(b"t,phi\n")
-        .unwrap();
+    analysis_file.write_all(b"t,phi\n").unwrap();
 
     for (frame1, frame2) in output_parser(BufReader::new(output_file1).lines())
         .zip(output_parser(BufReader::new(output_file2).lines()))
