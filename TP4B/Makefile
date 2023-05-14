@@ -6,12 +6,16 @@ RUN_ARGS :=
 MAX_TIME :=
 PRECISION := F64
 FEATURES :=
+MIN_BALL_AMOUNT :=
 
 ifeq "$(PRECISION)" "F64"
 	FEATURES := "use_f64"
 else
 	FEATURES := "use_f32"
 endif
+MAX_TIME_ARG := $(if $(MAX_TIME),--max-duration $(MAX_TIME))
+CAPTURE_DIR_ARG := $(if $(CAPTURE_DIR),--capture-directory $(CAPTURE_DIR))
+MIN_BALL_AMOUNT_ARG := $(if $(MIN_BALL_AMOUNT),--min-ball-amount $(MIN_BALL_AMOUNT))
 
 
 build:
@@ -19,15 +23,15 @@ build:
 
 run-with-vis: build
 	make -C .. -f Makefile.rust -s run-raw BIN=simulation \
-		ARGS="--input $(INPUT_FILE_PATH) $(if $(MAX_TIME),--max-duration $(MAX_TIME)) --delta-time-n=5 --output-every=1000" | \
+		ARGS="--input $(INPUT_FILE_PATH) $(MAX_TIME_ARG) --delta-time-n=5 --output-every=1000" | \
 	make -C .. -f Makefile.rust run-raw BIN=visualization \
-		ARGS="--input $(INPUT_FILE_PATH) --output /dev/stdin --no-holes $(if $(CAPTURE_DIR),--capture-directory $(CAPTURE_DIR))"
+		ARGS="--input $(INPUT_FILE_PATH) --output /dev/stdin --no-holes $(CAPTURE_DIR_ARG)"
 
 run-with-vis-2: build
 	make -C .. -f Makefile.rust -s run-raw BIN=simulation \
-		ARGS="--input $(INPUT_FILE_PATH) $(if $(MAX_TIME),--max-duration $(MAX_TIME)) --delta-time-n=5 --output-every=1000 --with-holes" | \
+		ARGS="--input $(INPUT_FILE_PATH) $(MAX_TIME_ARG) $(MIN_BALL_AMOUNT_ARG) --delta-time-n=5 --output-every=1000 --with-holes" | \
 	make -C .. -f Makefile.rust run-raw BIN=visualization \
-		ARGS="--input $(INPUT_FILE_PATH) --output /dev/stdin $(if $(CAPTURE_DIR),--capture-directory $(CAPTURE_DIR))"
+		ARGS="--input $(INPUT_FILE_PATH) --output /dev/stdin $(CAPTURE_DIR_ARG)"
 
 run-raw:
 	make -C .. -f Makefile.rust -s run-raw PACKAGE=tp4b ARGS="$(RUN_ARGS)"

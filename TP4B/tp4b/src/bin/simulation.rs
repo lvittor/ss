@@ -43,6 +43,9 @@ struct Args {
 
     #[arg(short, long)]
     max_duration: Option<f64>,
+
+    #[arg(long)]
+    min_ball_amount: Option<usize>,
 }
 
 struct InputData {
@@ -302,8 +305,11 @@ fn main() {
         Box::new(stdout())
     };
 
-    run(input, writer, |_state, t| {
+    run(input, writer, |state, t| {
         args.max_duration
             .is_some_and(|max_duration| t > max_duration)
+            || args
+                .min_ball_amount
+                .is_some_and(|min_ball_amount| state.len() < min_ball_amount)
     });
 }
