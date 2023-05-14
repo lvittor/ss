@@ -15,7 +15,7 @@ use std::{
 use itertools::Itertools;
 use nalgebra::Vector2;
 use pool::{
-    models::{Ball, Frame, InputData as SimpleInputData},
+    models::{Ball, Frame, InputData as SimpleInputData, IterableFrame},
     parser::input_parser,
     Float, HOLE_POSITIONS,
 };
@@ -132,41 +132,42 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
         });
     }
 
-    {
         // Write to output
-        let frame = Frame {
+        IterableFrame {
             time,
-            balls: state.values().map(|(b, _)| b).copied().collect_vec(),
-        };
-        output_writer.write_fmt(format_args!("{frame}")).unwrap();
-    }
+            balls: state.values().map(|(b, _)| b),
+        }
+        .write_to(&mut output_writer)
+        .unwrap();
 
     let delta_time = (10.0 as Float).powi(-(config.delta_time_n as i32));
     let mut iteration = 0;
 
+    let mut predictions = BTreeMap::new();
+    let mut predicted_balls = Vec::new();
+    let mut forces = HashMap::new();
+
     while !stop_condition(&state, time) {
         let radius_sum = config.simple_input_data.ball_radius * 2.0;
 
-        let predictions: BTreeMap<_, _> = state
-            .iter()
-            .map(|(&id, (b, [r2, r3, r4, r5]))| {
-                (
-                    id,
-                    GearPredictor::from_ball(&b, *r2, *r3, *r4, *r5).predict(delta_time),
-                )
-            })
-            .collect();
+        predictions.clear();
+        predictions.extend(state.iter().map(|(&id, (b, [r2, r3, r4, r5]))| {
+            (
+                id,
+                GearPredictor::from_ball(b, *r2, *r3, *r4, *r5).predict(delta_time),
+            )
+        }));
+
+        predicted_balls.clear();
+        predicted_balls.extend(predictions.iter().map(|(&id, pred)| Ball {
+            id,
+            radius: state[&id].0.radius,
+            position: pred.predictions[0],
+            velocity: pred.predictions[1],
+        }));
 
         let neighbors = SimpleNeighborFinder::find_neighbors(
-            &predictions
-                .iter()
-                .map(|(&id, pred)| Ball {
-                    id,
-                    radius: state[&id].0.radius,
-                    position: pred.predictions[0],
-                    velocity: pred.predictions[1],
-                })
-                .collect_vec(),
+            &predicted_balls,
             cim::simple_finder::SystemInfo {
                 cyclic: false,
                 interaction_radius: 0.0,
@@ -190,7 +191,8 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
         );
         */
 
-        let mut forces: HashMap<_, _> = state.iter().map(|(&k, _)| (k, Vector2::zeros())).collect();
+        forces.clear();
+        forces.extend(state.iter().map(|(&k, _)| (k, Vector2::zeros())));
 
         let get_predicted_ball = |corrector: &GearCorrector<_>, original_ball: &Ball| {
             let &Ball { id, radius, .. } = original_ball;
@@ -205,7 +207,10 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
             }
         };
 
-        for (id, ball) in predictions.iter().map(|(&id, corrector)| (id, get_predicted_ball(corrector, &state[&id].0))) {
+        for (id, ball) in predictions
+            .iter()
+            .map(|(&id, corrector)| (id, get_predicted_ball(corrector, &state[&id].0)))
+        {
             let neighs = neighbors.get_neighbors(id);
 
             for other in neighs.map(|id| get_predicted_ball(&predictions[id], &state[id].0)) {
@@ -255,11 +260,12 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
 
         if iteration % config.output_every == 0 {
             // Write to output
-            let frame = Frame {
+            IterableFrame {
                 time,
-                balls: state.values().map(|(b, _)| b).copied().collect_vec(),
-            };
-            output_writer.write_fmt(format_args!("{frame}")).unwrap();
+                balls: state.values().map(|(b, _)| b),
+            }
+            .write_to(&mut output_writer)
+            .unwrap();
         }
     }
 }
