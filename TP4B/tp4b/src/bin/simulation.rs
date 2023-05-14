@@ -283,6 +283,16 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
             .unwrap();
         }
     }
+
+    // Write last frame in case it wasnt
+    if iteration % config.output_every != 0 {
+        IterableFrame {
+            time,
+            balls: state.values().map(|(b, _)| b),
+        }
+        .write_to(&mut output_writer)
+        .unwrap();
+    }
 }
 
 fn main() {
