@@ -5,6 +5,7 @@ use cim::{
     /*cim_finder::CimNeighborFinder, */ neighbor_finder::NeighborFinder, particles::ID,
     simple_finder::SimpleNeighborFinder,
 };
+use gear_predictor_corrector::{GearCorrector, GearPredictor};
 use std::{
     collections::{BTreeMap, HashMap},
     fs::{self, File},
@@ -16,7 +17,7 @@ use nalgebra::Vector2;
 use pool::{
     models::{Ball, Frame, InputData as SimpleInputData},
     parser::input_parser,
-    Float,
+    Float, HOLE_POSITIONS,
 };
 
 use clap::Parser as _parser;
@@ -84,96 +85,31 @@ fn calculate_force(b: &Ball, other: &Ball, radius_sum: Float) -> Vector2<Float> 
     K * ((b.position - other.position).magnitude() - radius_sum) * r_hat
 }
 
-/*
-fn find_earliest_collision(
-    state: &[&Ball],
-    holes: &[Vector2<Float>],
-    config: &InputData,
-) -> Option<Collision> {
-    let mut earliest: Option<Collision> = None;
-    for (ball_1, ball_2) in state.iter().tuple_combinations() {
-        if let Some(time) = find_collision_between_balls(ball_1, ball_2, config.ball_radius * 2.0)
-            && earliest.map(|e| time < e.time).unwrap_or(true)
-        {
-            earliest = Some(Collision {
-                time,
-                info: CollisionAgainst::Ball(ball_1.id, ball_2.id)
-            });
-        }
-    }
-
-    for (ball, hole) in state.iter().cartesian_product(holes.iter()) {
-        if let Some(time) = find_collision_between_balls(ball, &Ball {
-            id: 0,
-            position: *hole,
-            velocity: Vector2::zeros()
-        }, config.ball_radius + config.hole_radius)
-            && earliest.map(|e| time < e.time).unwrap_or(true)
-        {
-            earliest = Some(Collision {
-                time,
-                info: CollisionAgainst::Hole(ball.id)
-            });
-        }
-    }
-
-    for ball in state.iter() {
-        if let Some((time, wall_type)) = find_collision_against_wall(ball, config)
-            && earliest.map(|e| time < e.time).unwrap_or(true)
-        {
-            earliest = Some(Collision {
-                time,
-                info: CollisionAgainst::Wall(ball.id, wall_type)
-            });
-        }
-    }
-
-    earliest
+trait PredictorFromBall: Sized {
+    fn from_ball(
+        ball: &Ball,
+        r2: Vector2<f64>,
+        r3: Vector2<f64>,
+        r4: Vector2<f64>,
+        r5: Vector2<f64>,
+    ) -> Self;
 }
-*/
 
-/*
-fn apply_collision(state: &mut BTreeMap<ID, Ball>, config: &InputData, collision: Collision) {
-    match collision.info {
-        CollisionAgainst::Ball(id1, id2) => {
-            let delta_v = state[&id2].velocity - state[&id1].velocity;
-            let delta_r = state[&id2].position - state[&id1].position;
-            let sigma = config.ball_radius * 2.0;
-
-            let j = (2.0 * config.ball_mass.powi(2) * (delta_v.dot(&delta_r)))
-                / (sigma * (config.ball_mass * 2.0));
-            let j_vec = delta_r * j / sigma;
-
-            let ball_1 = state.get_mut(&id1).unwrap();
-            ball_1.velocity += j_vec / config.ball_mass;
-            let ball_2 = state.get_mut(&id2).unwrap();
-            ball_2.velocity -= j_vec / config.ball_mass;
-        }
-        CollisionAgainst::Wall(id, wall_type) => match wall_type {
-            WallType::Horizontal => state.get_mut(&id).unwrap().velocity.y *= -1.0,
-            WallType::Vertical => state.get_mut(&id).unwrap().velocity.x *= -1.0,
-        },
-        CollisionAgainst::Hole(id) => {
-            state.remove(&id);
+impl PredictorFromBall for GearPredictor<Vector2<f64>> {
+    fn from_ball(
+        ball: &Ball,
+        r2: Vector2<f64>,
+        r3: Vector2<f64>,
+        r4: Vector2<f64>,
+        r5: Vector2<f64>,
+    ) -> Self {
+        Self {
+            rs: [ball.position, ball.velocity, r2, r3, r4, r5],
         }
     }
 }
-*/
 
-fn euler_algorithm(
-    p: Vector2<Float>,
-    v: Vector2<Float>,
-    a: Vector2<Float>,
-    delta_time: Float,
-) -> (Vector2<Float>, Vector2<Float>) {
-    let v_next = v + delta_time * a;
-
-    let p_next = p + delta_time * v_next + delta_time.powi(2) / 2.0 * a;
-
-    (p_next, v_next)
-}
-
-fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
+fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bool>(
     config: InputData,
     mut output_writer: W,
     mut stop_condition: F,
@@ -184,21 +120,23 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
         .balls
         .iter()
         .copied()
-        .map(|p| (p.id, p))
+        .map(|p| (p.id, (p, [Vector2::zeros(); 4])))
         .collect();
 
-    //let holes = HOLE_POSITIONS.map(|v| {
-    //v.component_mul(&Vector2::new(
-    //config.simple_input_data.table_width,
-    //config.simple_input_data.table_height,
-    //))
-    //});
+    if config.with_holes {
+        let holes = HOLE_POSITIONS.map(|v| {
+            v.component_mul(&Vector2::new(
+                config.simple_input_data.table_width,
+                config.simple_input_data.table_height,
+            ))
+        });
+    }
 
     {
         // Write to output
         let frame = Frame {
             time,
-            balls: state.values().copied().collect_vec(),
+            balls: state.values().map(|(b, _)| b).copied().collect_vec(),
         };
         output_writer.write_fmt(format_args!("{frame}")).unwrap();
     }
@@ -207,12 +145,28 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
     let mut iteration = 0;
 
     while !stop_condition(&state, time) {
-        let mut forces: HashMap<_, _> = state.iter().map(|(&k, _)| (k, Vector2::zeros())).collect();
-
         let radius_sum = config.simple_input_data.ball_radius * 2.0;
 
+        let predictions: BTreeMap<_, _> = state
+            .iter()
+            .map(|(&id, (b, [r2, r3, r4, r5]))| {
+                (
+                    id,
+                    GearPredictor::from_ball(&b, *r2, *r3, *r4, *r5).predict(delta_time),
+                )
+            })
+            .collect();
+
         let neighbors = SimpleNeighborFinder::find_neighbors(
-            &state.values().cloned().collect_vec(),
+            &predictions
+                .iter()
+                .map(|(&id, pred)| Ball {
+                    id,
+                    radius: state[&id].0.radius,
+                    position: pred.predictions[0],
+                    velocity: pred.predictions[1],
+                })
+                .collect_vec(),
             cim::simple_finder::SystemInfo {
                 cyclic: false,
                 interaction_radius: 0.0,
@@ -236,16 +190,33 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
         );
         */
 
-        for (&id, ball) in &state {
+        let mut forces: HashMap<_, _> = state.iter().map(|(&k, _)| (k, Vector2::zeros())).collect();
+
+        let get_predicted_ball = |corrector: &GearCorrector<_>, original_ball: &Ball| {
+            let &Ball { id, radius, .. } = original_ball;
+            let &GearCorrector {
+                predictions: [position, velocity, ..],
+            } = corrector;
+            Ball {
+                id,
+                radius,
+                position,
+                velocity,
+            }
+        };
+
+        for (id, ball) in predictions.iter().map(|(&id, corrector)| (id, get_predicted_ball(corrector, &state[&id].0))) {
             let neighs = neighbors.get_neighbors(id);
 
-            for other in neighs.map(|id| state[id]) {
-                let force = calculate_force(ball, &other, radius_sum);
-                *forces.get_mut(&ball.id).unwrap() += force;
-                *forces.get_mut(&other.id).unwrap() -= force;
+            for other in neighs.map(|id| get_predicted_ball(&predictions[id], &state[id].0)) {
+                if id > other.id {
+                    let force = calculate_force(&ball, &other, radius_sum);
+                    *forces.get_mut(&ball.id).unwrap() += force;
+                    *forces.get_mut(&other.id).unwrap() -= force;
+                }
             }
 
-            let walls = did_ball_go_outside(ball, &config);
+            let walls = did_ball_go_outside(&ball, &config);
             for wall in walls {
                 match wall {
                     Wall::Left => {
@@ -270,12 +241,13 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
             }
         }
 
-        for (id, ball) in state.iter_mut() {
+        for (id, (ball, higher_order)) in state.iter_mut() {
             let force = forces.get(id).cloned().unwrap_or_else(Vector2::zeros);
             let acceleration = force / config.simple_input_data.ball_mass;
-            let (p, v) = euler_algorithm(ball.position, ball.velocity, acceleration, delta_time);
+            let [p, v, r2, r3, r4, r5] = predictions[id].correct(acceleration, delta_time);
             ball.position = p;
             ball.velocity = v;
+            *higher_order = [r2, r3, r4, r5];
         }
 
         time += delta_time;
@@ -285,7 +257,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, Ball>, Float) -> bool>(
             // Write to output
             let frame = Frame {
                 time,
-                balls: state.values().copied().collect_vec(),
+                balls: state.values().map(|(b, _)| b).copied().collect_vec(),
             };
             output_writer.write_fmt(format_args!("{frame}")).unwrap();
         }

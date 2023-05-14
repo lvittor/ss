@@ -29,7 +29,6 @@ pub(crate) fn beeman<F: Fn(f64, f64) -> f64, Callback: CallbackFn>(
     let prev_f = calculate_force(prev_r, prev_v);
     let mut prev_a = prev_f / m;
 
-
     while t < tf {
         callback(t, curr_r, curr_v);
 

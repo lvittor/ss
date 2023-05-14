@@ -27,9 +27,7 @@ def run_multiple_times(times: int):
 
     return decorator
 
-
-@run_multiple_times(times=1000)
-def run_simulation(input_data: str):
+def run_simulation(input_data: str, k: int, output_every: int):
     simulation_process = subprocess.Popen(
         [
             "make",
@@ -37,7 +35,7 @@ def run_simulation(input_data: str):
             "run-raw",
             "BIN=simulation",
             "USE_DOCKER=FALSE",
-            f"RUN_ARGS=-i /dev/stdin -o /dev/stdout",
+            f"RUN_ARGS=-i /dev/stdin -o /dev/stdout --delta-time-n={k} --max-duration=100 --output-every={output_every}",
         ],
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
@@ -47,85 +45,54 @@ def run_simulation(input_data: str):
     simulation_process.stdin.write(input_data)
     simulation_process.stdin.close()
 
+    return simulation_process
+
+def run_simulation_diff(input_data: str, k: int):
+    steps = int(1e-1 // 10**-k)
+    simulation_k = run_simulation(input_data, k, steps)
+    simulation_k_plus = run_simulation(input_data, k + 1, steps * 10)
+
     analyzer_process = subprocess.Popen(
         [
             "make",
             "-s",
             "run-raw",
-            "BIN=analyze",
+            "BIN=diff_analyze",
             "USE_DOCKER=FALSE",
-            f"RUN_ARGS=-i /dev/stdin -o /dev/fd/{simulation_process.stdout.fileno()} -a /dev/stdout",
+            f"RUN_ARGS=--output1=/dev/fd/{simulation_k.stdout.fileno()} --output2=/dev/fd/{simulation_k_plus.stdout.fileno()} -a=/dev/stdout",
         ],
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         text=True,
-        pass_fds=(simulation_process.stdout.fileno(),),
+        pass_fds=(simulation_k.stdout.fileno(),simulation_k_plus.stdout.fileno(),),
     )
 
     analysis, _ = analyzer_process.communicate(input_data)
 
-    return pd.read_csv(
-        StringIO(analysis),
-        header=None,
-        names=["t", "ball_count", "kinetic_energy"],
-        dtype={"t": np.float64, "ball_count": np.uint64, "kinetic_energy": np.float64},
-    )
+    return pd.read_csv(StringIO(analysis))
 
-def run_multiple_ys():
+def run_multiple_ks():
     df = pd.DataFrame({
-        'white_y': pd.Series(dtype=float),
-        'run': pd.Series(dtype=int),
-        't': pd.Series(dtype=float),
-        'ball_count': pd.Series(dtype=int),
-        'kinetic_energy': pd.Series(dtype=float),
+        'k': pd.Series(dtype=int),
+        't': pd.Series(dtype=np.float64),
+        'phi': pd.Series(dtype=np.float64),
     })
 
-    for white_y in range(47, 56+1):
-        print(f"white_y={white_y}")
-        data = run_simulation(lambda: generate(
+    for k in range(2, 2+1):
+        print(f"k={k}")
+        data = run_simulation_diff(generate(
             table_width=224,
             table_height=112,
-            white_y=white_y,
+            white_y=56,
             hole_diameter=5.7*2,
             ball_diameter=5.7,
             ball_mass=165
-        ))
-        data['white_y'] = white_y
+        ), k)
+        data['k'] = k
         df = pd.concat([df, data], ignore_index=False)
 
-    df.to_pickle("data/simulation_runs_ys.pkl")
-    print(df)
-
-def run_multiple_speeds():
-    df = pd.DataFrame(
-        {
-            "initial_speed": pd.Series(dtype=float),
-            "run": pd.Series(dtype=int),
-            "t": pd.Series(dtype=float),
-            "ball_count": pd.Series(dtype=int),
-            "kinetic_energy": pd.Series(dtype=float),
-        }
-    )
-
-    for speed in (200, 400, 800, 1600, 3200):
-        print(f"initial_speed={speed}")
-        data = run_simulation(
-            lambda: generate(
-                table_width=224,
-                table_height=112,
-                white_y=56,
-                hole_diameter=5.7 * 2,
-                ball_diameter=5.7,
-                ball_mass=165,
-                speed=speed,
-            )
-        )
-        data["initial_speed"] = speed
-        df = pd.concat([df, data], ignore_index=False)
-
-    df.to_pickle("data/simulation_runs_speeds.pkl")
-    print(df)
+    df.to_csv("data/simulation_runs_ks.csv", index=False, na_rep='NaN')
+    print(df.to_string())
 
 if __name__ == "__main__":
-    run_multiple_speeds()
-    run_multiple_ys()
+    run_multiple_ks()

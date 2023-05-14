@@ -7,8 +7,8 @@ use std::{
 use chumsky::Parser;
 use clap::Parser as _parser;
 use pool::{
-    parser::{input_parser, output_parser},
     models::Frame,
+    parser::{input_parser, output_parser},
     Float,
 };
 
