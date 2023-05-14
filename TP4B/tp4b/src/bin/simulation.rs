@@ -1,4 +1,5 @@
 #![feature(let_chains)]
+#![feature(btree_drain_filter)]
 
 use chumsky::Parser;
 use cim::{
@@ -123,14 +124,18 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
         .map(|p| (p.id, (p, [Vector2::zeros(); 4])))
         .collect();
 
-    if config.with_holes {
-        let holes = HOLE_POSITIONS.map(|v| {
-            v.component_mul(&Vector2::new(
-                config.simple_input_data.table_width,
-                config.simple_input_data.table_height,
-            ))
-        });
-    }
+    let holes = if config.with_holes {
+        HOLE_POSITIONS
+            .map(|v| {
+                v.component_mul(&Vector2::new(
+                    config.simple_input_data.table_width,
+                    config.simple_input_data.table_height,
+                ))
+            })
+            .to_vec()
+    } else {
+        vec![]
+    };
 
     // Write to output
     IterableFrame {
@@ -254,6 +259,13 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
             ball.velocity = v;
             *higher_order = [r2, r3, r4, r5];
         }
+
+        state.drain_filter(|_, (ball, _)| {
+            holes.iter().any(|hole| {
+                (hole - ball.position).magnitude_squared()
+                    <= (config.simple_input_data.hole_radius + ball.radius).powi(2)
+            })
+        });
 
         time = iteration as f64 * delta_time;
         iteration += 1;

@@ -23,6 +23,12 @@ run-with-vis: build
 	make -C .. -f Makefile.rust run-raw BIN=visualization \
 		ARGS="--input $(INPUT_FILE_PATH) --output /dev/stdin --no-holes $(if $(CAPTURE_DIR),--capture-directory $(CAPTURE_DIR))"
 
+run-with-vis-2: build
+	make -C .. -f Makefile.rust -s run-raw BIN=simulation \
+		ARGS="--input $(INPUT_FILE_PATH) $(if $(MAX_TIME),--max-duration $(MAX_TIME)) --delta-time-n=5 --output-every=1000 --with-holes" | \
+	make -C .. -f Makefile.rust run-raw BIN=visualization \
+		ARGS="--input $(INPUT_FILE_PATH) --output /dev/stdin $(if $(CAPTURE_DIR),--capture-directory $(CAPTURE_DIR))"
+
 run-raw:
 	make -C .. -f Makefile.rust -s run-raw PACKAGE=tp4b ARGS="$(RUN_ARGS)"
 
@@ -61,4 +67,4 @@ generate-speedup-video:
 			[v0][v1][v2]concat=n=3" \
 		-c:v h264_nvenc -preset p6 -tune hq -b:v 10M -pix_fmt yuv420p video_speed.mp4
 
-.PHONY: build run-raw run-with-vis
+.PHONY: build run-raw run-with-vis run-with-vis2
