@@ -41,6 +41,10 @@ pub fn draw<BI: IntoIterator<Item = Ball>>(
             circle.color(WHITE).finish();
         } else {
             let base = hsv((particle.id as f32 - 1.0) / 15.0, 1.0, 1.0).desaturate(0.1);
+            //let base = match particle.id {
+                //15 | 3 | 8 => hsv(0.0, 0.0, 1.0),
+                //_ => hsv(0.0, 0.0, 0.0),
+            //};
             circle_border.color(base.darken(0.5)).finish();
             circle.color(base).finish();
         }

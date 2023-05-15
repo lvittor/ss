@@ -62,6 +62,7 @@ if __name__ == "__main__":
             table_width=224,
             table_height=112,
             white_y=random.uniform(42, 56),
+            # white_y=48.63157894736842,
             hole_diameter=5.7 * 2,
             ball_diameter=5.7,
             ball_mass=165,
