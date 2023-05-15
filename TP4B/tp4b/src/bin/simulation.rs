@@ -292,8 +292,8 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
             })
             .count();
 
-        time = iteration as f64 * delta_time;
         iteration += 1;
+        time = iteration as f64 * delta_time;
 
         if match &config.output_condition {
             OutputCondition::Every(EveryArgs { steps, .. }) => iteration % steps == 0,

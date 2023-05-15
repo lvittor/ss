@@ -43,7 +43,7 @@ def run_simulation(k: int, output_every: int):
             "run-raw",
             "BIN=simulation",
             "USE_DOCKER=FALSE",
-            f"RUN_ARGS=-i /dev/stdin -o /dev/stdout --delta-time-n={k} --max-duration=100 every {output_every} --last",
+            f"RUN_ARGS=-i /dev/stdin -o /dev/stdout --delta-time-n={k} --max-duration=100 every {output_every}",
         ],
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
@@ -161,14 +161,15 @@ def run_multiple_ks():
         hole_diameter=5.7*2,
         ball_diameter=5.7,
         ball_mass=165,
+        speed=100,
         seed=153789
     )
     # simulations = [(k, run_simulation(k, int(0.1 / 10**-k))) for k in range(2, 6 + 1)]
 
     # outputs = []
     # for k, simulation in simulations:
-    # print(k)
-    # outputs.append((k, simulation.communicate(input_data)[0]))
+        # print(k)
+        # outputs.append((k, simulation.communicate(input_data)[0]))
 
     # json.dump(outputs, open('outputs.json', 'w'));
     outputs = json.load(open('outputs.json'))
@@ -212,5 +213,5 @@ def run_multiple_ys():
 
 
 if __name__ == "__main__":
-    # run_multiple_ks()
-    run_multiple_ys()
+    run_multiple_ks()
+    # run_multiple_ys()
