@@ -21,7 +21,14 @@ use pool::{
     Float, HOLE_POSITIONS,
 };
 
-use clap::Parser as _parser;
+use clap::{Parser as _parser, Subcommand, ValueEnum};
+
+#[derive(Subcommand, Debug)]
+#[clap(rename_all = "kebab_case")]
+enum OutputCondition {
+    Every { steps: u64, last: bool },
+    WhenBallCountHits { counts: Vec<usize> },
+}
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -35,8 +42,8 @@ struct Args {
     #[arg(short, long)]
     delta_time_n: u16,
 
-    #[arg(long)]
-    output_every: u64,
+    #[command(subcommand)]
+    output_condition: OutputCondition,
 
     #[arg(short, long)]
     with_holes: bool,
@@ -50,7 +57,7 @@ struct Args {
 
 struct InputData {
     simple_input_data: SimpleInputData,
-    output_every: u64,
+    output_condition: OutputCondition,
     delta_time_n: u16,
     with_holes: bool,
 }
@@ -140,13 +147,20 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
         vec![]
     };
 
-    // Write to output
-    IterableFrame {
-        time,
-        balls: state.values().map(|(b, _)| b),
+    if match &config.output_condition {
+        OutputCondition::Every { .. } => true,
+        OutputCondition::WhenBallCountHits { counts } => {
+            counts.iter().any(|&count| state.len() <= count)
+        }
+    } {
+        // Write to output
+        IterableFrame {
+            time,
+            balls: state.values().map(|(b, _)| b),
+        }
+        .write_to(&mut output_writer)
+        .unwrap();
     }
-    .write_to(&mut output_writer)
-    .unwrap();
 
     let delta_time = (10.0 as Float).powi(-(config.delta_time_n as i32));
     let mut iteration = 0;
@@ -263,17 +277,24 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
             *higher_order = [r2, r3, r4, r5];
         }
 
-        state.drain_filter(|_, (ball, _)| {
-            holes.iter().any(|hole| {
-                (hole - ball.position).magnitude_squared()
-                    <= (config.simple_input_data.hole_radius + ball.radius).powi(2)
+        let removed_balls = state
+            .drain_filter(|_, (ball, _)| {
+                holes.iter().any(|hole| {
+                    (hole - ball.position).magnitude_squared()
+                        <= (config.simple_input_data.hole_radius + ball.radius).powi(2)
+                })
             })
-        });
+            .count();
 
         time = iteration as f64 * delta_time;
         iteration += 1;
 
-        if iteration % config.output_every == 0 {
+        if match &config.output_condition {
+            OutputCondition::Every { steps, .. } => iteration % steps == 0,
+            OutputCondition::WhenBallCountHits { counts } => counts
+                .iter()
+                .any(|&count| state.len() <= count && state.len() + removed_balls > count),
+        } {
             // Write to output
             IterableFrame {
                 time,
@@ -285,7 +306,10 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
     }
 
     // Write last frame in case it wasnt
-    if iteration % config.output_every != 0 {
+    if match config.output_condition {
+        OutputCondition::Every { steps, last } => last && iteration % steps != 0,
+        OutputCondition::WhenBallCountHits { .. } => false,
+    } {
         IterableFrame {
             time,
             balls: state.values().map(|(b, _)| b),
@@ -306,7 +330,7 @@ fn main() {
             .expect("Error parsing input data."),
         delta_time_n: args.delta_time_n,
         with_holes: args.with_holes,
-        output_every: args.output_every,
+        output_condition: args.output_condition,
     };
 
     let writer = if let Some(output) = args.output {
