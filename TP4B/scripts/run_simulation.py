@@ -43,7 +43,7 @@ def run_simulation(k: int, output_every: int):
             "run-raw",
             "BIN=simulation",
             "USE_DOCKER=FALSE",
-            f"RUN_ARGS=-i /dev/stdin -o /dev/stdout --delta-time-n={k} --max-duration=100 --output-every={output_every}",
+            f"RUN_ARGS=-i /dev/stdin -o /dev/stdout --delta-time-n={k} --max-duration=100 every {output_every} --last",
         ],
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
@@ -54,8 +54,8 @@ def run_simulation(k: int, output_every: int):
 
 
 @run_multiple_times(times=24)
-def run_simulation_analysis(args: tuple[str, int, int]):
-    (input_data, k, target_ball_amount) = args
+def run_simulation_analysis(args: tuple[str, int, list[int]]):
+    (input_data, k, target_ball_amounts) = args
     # output_every = 0.1 / 10**-k
     output_every = 100000000
     simulation_process = subprocess.Popen(
@@ -69,10 +69,10 @@ def run_simulation_analysis(args: tuple[str, int, int]):
             "-i /dev/stdin " +
             "-o /dev/stdout " +
             f"--delta-time-n={k} " +
-            f"--output-every={output_every} " +
             f"--max-duration={10000} " +
             "--with-holes " +
-            f"--min-ball-amount={target_ball_amount + 1}",
+            f"--min-ball-amount={1} " +
+            f"when-ball-count-hits {' '.join(map(str, target_ball_amounts))} ",
         ],
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
@@ -107,7 +107,6 @@ def run_simulation_analysis(args: tuple[str, int, int]):
                "kinetic_energy": np.float64},
     )
 
-    df = df[df['ball_count'] == target_ball_amount]
     df = df.drop(['kinetic_energy'], axis=1)
     df = df.rename(
         columns={'ball_count': 'final_ball_amount', 't': 'final_time'})
@@ -195,19 +194,18 @@ def run_multiple_ys():
         'final_ball_amount': pd.Series(dtype=np.uint64),
     })
 
-    for target_ball_amount in (8, 0):
-        for white_y in np.linspace(42, 56, 2):
-            print(f"target_ball_amount={target_ball_amount} white_y={white_y}")
-            data = run_simulation_analysis(lambda: (generate(
-                table_width=224,
-                table_height=112,
-                white_y=white_y,
-                hole_diameter=5.7*2,
-                ball_diameter=5.7,
-                ball_mass=165
-            ), 4, target_ball_amount))
-            data['white_y'] = white_y
-            df = pd.concat([df, data], ignore_index=True)
+    for white_y in np.linspace(42, 56, 2):
+        print(f"white_y={white_y}")
+        data = run_simulation_analysis(lambda: (generate(
+            table_width=224,
+            table_height=112,
+            white_y=white_y,
+            hole_diameter=5.7*2,
+            ball_diameter=5.7,
+            ball_mass=165
+        ), 4, [0, 8]))
+        data['white_y'] = white_y
+        df = pd.concat([df, data], ignore_index=True)
 
     df.to_csv("data/simulation_runs_ys.csv", index=False)
     print(df)

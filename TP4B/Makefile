@@ -23,13 +23,13 @@ build:
 
 run-with-vis: build
 	make -C .. -f Makefile.rust -s run-raw BIN=simulation \
-		ARGS="--input $(INPUT_FILE_PATH) $(MAX_TIME_ARG) --delta-time-n=5 --output-every=1000" | \
+		ARGS="--input $(INPUT_FILE_PATH) $(MAX_TIME_ARG) --delta-time-n=5 every 1000 --last" | \
 	make -C .. -f Makefile.rust run-raw BIN=visualization \
 		ARGS="--input $(INPUT_FILE_PATH) --output /dev/stdin --no-holes $(CAPTURE_DIR_ARG)"
 
 run-with-vis-2: build
 	make -C .. -f Makefile.rust -s run-raw BIN=simulation \
-		ARGS="--input $(INPUT_FILE_PATH) $(MAX_TIME_ARG) $(MIN_BALL_AMOUNT_ARG) --delta-time-n=5 --output-every=1000 --with-holes" | \
+		ARGS="--input $(INPUT_FILE_PATH) $(MAX_TIME_ARG) $(MIN_BALL_AMOUNT_ARG) --delta-time-n=5 --with-holes every 1000 --last" | \
 	make -C .. -f Makefile.rust run-raw BIN=visualization \
 		ARGS="--input $(INPUT_FILE_PATH) --output /dev/stdin $(CAPTURE_DIR_ARG)"
 

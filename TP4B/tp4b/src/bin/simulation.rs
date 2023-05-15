@@ -13,26 +13,32 @@ use std::{
     io::{stdout, Write},
 };
 
-use itertools::Itertools;
 use nalgebra::Vector2;
 use pool::{
-    models::{Ball, Frame, InputData as SimpleInputData, IterableFrame},
+    models::{Ball, InputData as SimpleInputData, IterableFrame},
     parser::input_parser,
     Float, HOLE_POSITIONS,
 };
 
-use clap::{Parser as _parser, Subcommand, ValueEnum};
+use clap::{Args, Parser as _parser, Subcommand};
 
 #[derive(Subcommand, Debug)]
 #[clap(rename_all = "kebab_case")]
 enum OutputCondition {
-    Every { steps: u64, last: bool },
+    Every(EveryArgs),
     WhenBallCountHits { counts: Vec<usize> },
+}
+
+#[derive(Debug, Args)]
+struct EveryArgs {
+    steps: u64,
+    #[arg(long)]
+    last: bool,
 }
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]
-struct Args {
+struct Arguments {
     #[arg(short, long)]
     input: String,
 
@@ -148,7 +154,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
     };
 
     if match &config.output_condition {
-        OutputCondition::Every { .. } => true,
+        OutputCondition::Every(..) => true,
         OutputCondition::WhenBallCountHits { counts } => {
             counts.iter().any(|&count| state.len() <= count)
         }
@@ -290,7 +296,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
         iteration += 1;
 
         if match &config.output_condition {
-            OutputCondition::Every { steps, .. } => iteration % steps == 0,
+            OutputCondition::Every(EveryArgs { steps, .. }) => iteration % steps == 0,
             OutputCondition::WhenBallCountHits { counts } => counts
                 .iter()
                 .any(|&count| state.len() <= count && state.len() + removed_balls > count),
@@ -307,7 +313,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
 
     // Write last frame in case it wasnt
     if match config.output_condition {
-        OutputCondition::Every { steps, last } => last && iteration % steps != 0,
+        OutputCondition::Every(EveryArgs { steps, last }) => last && iteration % steps != 0,
         OutputCondition::WhenBallCountHits { .. } => false,
     } {
         IterableFrame {
@@ -320,7 +326,7 @@ fn run<W: Write, F: FnMut(&BTreeMap<ID, (Ball, [Vector2<f64>; 4])>, Float) -> bo
 }
 
 fn main() {
-    let args = Args::parse();
+    let args = Arguments::parse();
 
     let input = fs::read_to_string(args.input).unwrap();
     let input = InputData {
