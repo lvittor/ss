@@ -53,11 +53,10 @@ def run_simulation(k: int, output_every: int):
     return simulation_process
 
 
-@run_multiple_times(times=12)
+@run_multiple_times(times=20)
 def run_simulation_analysis(args: tuple[str, int, list[int]]):
     (input_data, k, target_ball_amounts) = args
     # output_every = 0.1 / 10**-k
-    output_every = 100000000
     simulation_process = subprocess.Popen(
         [
             "make",
@@ -204,7 +203,7 @@ def run_multiple_ys():
             ball_diameter=5.7,
             ball_mass=165,
             speed=100
-        ), 4, [0, 4, 8, 12]))
+        ), 5, [0, 4, 8, 12]))
         data['white_y'] = white_y
         df = pd.concat([df, data], ignore_index=True)
 
