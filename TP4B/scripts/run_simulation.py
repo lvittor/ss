@@ -53,7 +53,7 @@ def run_simulation(k: int, output_every: int):
     return simulation_process
 
 
-@run_multiple_times(times=24)
+@run_multiple_times(times=12)
 def run_simulation_analysis(args: tuple[str, int, list[int]]):
     (input_data, k, target_ball_amounts) = args
     # output_every = 0.1 / 10**-k
@@ -194,7 +194,7 @@ def run_multiple_ys():
         'final_ball_amount': pd.Series(dtype=np.uint64),
     })
 
-    for white_y in np.linspace(42, 56, 2):
+    for white_y in np.linspace(42, 56, 20):
         print(f"white_y={white_y}")
         data = run_simulation_analysis(lambda: (generate(
             table_width=224,
@@ -202,8 +202,9 @@ def run_multiple_ys():
             white_y=white_y,
             hole_diameter=5.7*2,
             ball_diameter=5.7,
-            ball_mass=165
-        ), 4, [0, 8]))
+            ball_mass=165,
+            speed=100
+        ), 4, [0, 4, 8, 12]))
         data['white_y'] = white_y
         df = pd.concat([df, data], ignore_index=True)
 
