@@ -58,10 +58,7 @@ fn model(_app: &App, args: Args) -> Model {
         .into_result()
         .expect("Error parsing input data.");
 
-    let frame_iter = Box::new(output_parser(
-        system_info.particles.len(),
-        BufReader::new(output_file).lines(),
-    ));
+    let frame_iter = Box::new(output_parser(BufReader::new(output_file).lines()));
 
     Model {
         frame: Frame {
@@ -118,9 +115,9 @@ fn draw(_app: &App, model: &Model, draw: &Draw) {
         draw.ellipse()
             .radius(particle.radius as f32)
             .x(particle.position.x as f32)
-            .x(particle.position.y as f32)
-            //.color(colors[_i % colors.len()]);
+            .y(particle.position.y as f32)
+            //.color(WHITE);
             //.color(gradient.get(angle.rem_euclid(TAU_F64) as f32 / TAU));
-            .color(hsva(particle.radius as f32, 1.0, 1.0, 0.4));
+            .color(hsva((particle.radius % 1.0) as f32, 1.0, 1.0, 0.4));
     }
 }

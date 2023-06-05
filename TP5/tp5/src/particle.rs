@@ -52,28 +52,25 @@ pub struct Frame {
 
 pub struct IterableFrame<I> {
     pub time: f64,
-    pub balls: I,
+    pub particles: I,
 }
 
 impl<'a> From<&'a Frame> for IterableFrame<std::slice::Iter<'a, Particle>> {
     fn from(frame: &'a Frame) -> Self {
         Self {
             time: frame.time,
-            balls: frame.particles.iter(),
+            particles: frame.particles.iter(),
         }
     }
 }
 
 impl<'a, I: ExactSizeIterator<Item = &'a Particle>> IterableFrame<I> {
     pub fn write_fmt<W: std::fmt::Write>(self, f: &mut W) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}\n{}\n", self.balls.len(), self.time))?;
-        for particle in self.balls {
+        f.write_fmt(format_args!("{}\n{}\n", self.particles.len(), self.time))?;
+        for particle in self.particles {
             f.write_fmt(format_args!(
                 "{} {} {} {}\n",
-                particle.id,
-                particle.position.x,
-                particle.position.y,
-                particle.radius,
+                particle.id, particle.position.x, particle.position.y, particle.radius,
             ))?;
         }
 
@@ -83,14 +80,11 @@ impl<'a, I: ExactSizeIterator<Item = &'a Particle>> IterableFrame<I> {
 
 impl<'a, I: ExactSizeIterator<Item = &'a Particle>> IterableFrame<I> {
     pub fn write_to<W: Write>(self, f: &mut W) -> std::io::Result<()> {
-        f.write_fmt(format_args!("{}\n{}\n", self.balls.len(), self.time))?;
-        for particle in self.balls {
+        f.write_fmt(format_args!("{}\n{}\n", self.particles.len(), self.time))?;
+        for particle in self.particles {
             f.write_fmt(format_args!(
                 "{} {} {} {}\n",
-                particle.id,
-                particle.position.x,
-                particle.position.y,
-                particle.radius,
+                particle.id, particle.position.x, particle.position.y, particle.radius,
             ))?;
         }
 

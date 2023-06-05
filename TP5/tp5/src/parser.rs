@@ -82,59 +82,57 @@ pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich
 
 struct Chunks<I> {
     inner: I,
-    size: usize,
 }
 
-impl<I: Iterator> Iterator for Chunks<I> {
+impl<I: Iterator<Item = String>> Iterator for Chunks<I> {
     type Item = Vec<I::Item>;
 
     fn next(&mut self) -> Option<Self::Item> {
         let mut values = vec![];
-        for _ in 0..self.size {
-            if let Some(value) = self.inner.next() {
-                values.push(value);
-            } else {
-                return None;
+        if let Some(count) = self.inner.next().map(|v| v.parse::<usize>().unwrap()) {
+            for _ in 0..count + 1 {
+                if let Some(value) = self.inner.next() {
+                    values.push(value);
+                } else {
+                    return None;
+                }
             }
+            Some(values)
+        } else {
+            None
         }
-        Some(values)
     }
 }
 
 trait CollectedChunks: Iterator + Sized {
-    fn collected_chunks(self, size: usize) -> Chunks<Self> {
-        Chunks { inner: self, size }
+    fn collected_chunks(self) -> Chunks<Self> {
+        Chunks { inner: self }
     }
 }
 
 impl<I: Iterator> CollectedChunks for I {}
 
-pub fn output_parser<B: BufRead>(
-    particle_count: usize,
-    file: Lines<B>,
-) -> impl Iterator<Item = Frame> {
-    file.map(Result::unwrap)
-        .collected_chunks(particle_count + 1)
-        .map(|frame| {
-            let mut frame = frame.into_iter();
-            let time: f64 = frame.next().unwrap().parse().unwrap();
-            let particles = frame
-                .map(|line| {
-                    let mut values = line.split_whitespace();
-                    let id: ID = values.next().unwrap().parse().unwrap();
-                    let [x, y, radius]: [f64; 3] = values
-                        .map(|v| v.parse().unwrap())
-                        .collect_vec()
-                        .try_into()
-                        .unwrap();
-                    Particle {
-                        id,
-                        position: Vector2::new(x, y),
-                        radius,
-                        target: ParticleTarget::Exit,
-                    }
-                })
-                .collect_vec();
-            Frame { time, particles }
-        })
+pub fn output_parser<B: BufRead>(file: Lines<B>) -> impl Iterator<Item = Frame> {
+    file.map(Result::unwrap).collected_chunks().map(|frame| {
+        let mut frame = frame.into_iter();
+        let time: f64 = frame.next().unwrap().parse().unwrap();
+        let particles = frame
+            .map(|line| {
+                let mut values = line.split_whitespace();
+                let id: ID = values.next().unwrap().parse().unwrap();
+                let [x, y, radius]: [f64; 3] = values
+                    .map(|v| v.parse().unwrap())
+                    .collect_vec()
+                    .try_into()
+                    .unwrap();
+                Particle {
+                    id,
+                    position: Vector2::new(x, y),
+                    radius,
+                    target: ParticleTarget::Exit,
+                }
+            })
+            .collect_vec();
+        Frame { time, particles }
+    })
 }

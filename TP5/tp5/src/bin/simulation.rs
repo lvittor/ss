@@ -9,7 +9,7 @@ use nalgebra::Vector2;
 use rand::SeedableRng;
 use rand::{distributions::Uniform, rngs::StdRng};
 use tp5::parser::input_parser;
-use tp5::particle::{InputData as SimpleInputData, Particle};
+use tp5::particle::{InputData as SimpleInputData, IterableFrame, Particle};
 
 #[derive(clap::Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -46,6 +46,7 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
     mut stop_condition: F,
 ) {
     let dt = 1.0;
+    let mut iteration = 0;
     let mut time = 0.0;
     let mut state: BTreeMap<_, _> = config
         .simple_input_data
@@ -58,6 +59,37 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
     } else {
         StdRng::from_entropy()
     };
+
+    // Write to output
+    IterableFrame {
+        time,
+        particles: state.values(),
+    }
+    .write_to(&mut output_particles)
+    .unwrap();
+
+    while !stop_condition(&state, time) {
+        iteration += 1;
+        if iteration % config.output_every == 0 {
+            // Write to output
+            IterableFrame {
+                time,
+                particles: state.values(),
+            }
+            .write_to(&mut output_particles)
+            .unwrap();
+        }
+    }
+
+    // Write last frame in case it wasnt
+    if config.output_last && iteration % config.output_every != 0 {
+        IterableFrame {
+            time,
+            particles: state.values(),
+        }
+        .write_to(&mut output_particles)
+        .unwrap();
+    }
 }
 
 fn main() {
