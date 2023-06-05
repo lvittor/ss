@@ -14,9 +14,9 @@ COPY poetry.lock /project/poetry.lock
 WORKDIR /project
 
 RUN --mount=type=cache,target=/root/.cache/pip \
-    poetry install --with dev --no-root
+    poetry install --no-root
 
 COPY . /project
 
 RUN --mount=type=cache,target=/root/.cache/pip \
-    poetry install --with dev --no-interaction
+    poetry install --no-interaction
