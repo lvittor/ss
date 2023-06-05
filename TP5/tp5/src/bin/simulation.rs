@@ -1,3 +1,5 @@
+#![feature(btree_drain_filter)]
+
 use std::collections::HashMap;
 use std::fs::File;
 use std::{collections::BTreeMap, io::Write, path::PathBuf};
@@ -172,6 +174,8 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
 
             particle.position += particle_data.velocity * dt;
         }
+
+        state.drain_filter(|id, _| iteration_particle_data[id].to_delete);
 
         iteration += 1;
         time += dt;
