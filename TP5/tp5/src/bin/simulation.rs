@@ -264,6 +264,6 @@ fn main() {
         input,
         File::create(args.output_particles).unwrap(),
         File::create(args.output_exit_times).unwrap(),
-        |_state, _t| false,
+        |state, _t| state.is_empty()
     );
 }
