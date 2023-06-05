@@ -66,16 +66,16 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
     mut output_exit_times: W2,
     mut stop_condition: F,
 ) {
+    let input_data = config.simple_input_data;
     let dt = 1.0 / config.steps_per_second as f64;
     let mut iteration = 0;
     let mut time = 0.0;
-    let mut state: BTreeMap<_, _> = config
-        .simple_input_data
+    let mut state: BTreeMap<_, _> = input_data
         .particles
         .into_iter()
         .map(|p| (p.id, p))
         .collect();
-    let mut rng = if let Some(seed) = config.simple_input_data.rng_seed {
+    let mut rng = if let Some(seed) = input_data.rng_seed {
         StdRng::seed_from_u64(seed)
     } else {
         StdRng::from_entropy()
@@ -98,18 +98,6 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
     let mut iteration_particle_data: HashMap<ID, IterationParticleData> = HashMap::new();
 
     while !stop_condition(&state, time) {
-        //let neighbors = CimNeighborFinder::find_neighbors(
-        //&state.values().cloned().collect_vec(),
-        //cim::cim_finder::SystemInfo {
-        //cyclic: false,
-        //interaction_radius: 0.0,
-        //space_width: config.simple_input_data.room_side,
-        //space_height: config.simple_input_data.room_side
-        //+ config.simple_input_data.far_exit_distance,
-        //columns: (config.simple_input_data.room_side / radius_sum).floor() as usize,
-        //rows: (config.simple_input_data.table_height / radius_sum).floor() as usize,
-        //},
-        //);
         iteration_particle_data.clear();
         iteration_particle_data.extend(state.iter().map(|(&id, _)| {
             (
@@ -138,32 +126,27 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
         for (id, particle) in state.iter_mut() {
             let particle_data = iteration_particle_data.get_mut(id).unwrap();
             if particle_data.in_contact {
-                particle.radius = config.simple_input_data.min_radius;
-                particle_data.velocity =
-                    particle_data.velocity.normalize() * config.simple_input_data.max_speed;
+                particle.radius = input_data.min_radius;
+                particle_data.velocity = particle_data.velocity.normalize() * input_data.max_speed;
             } else {
-                if particle.radius < config.simple_input_data.max_radius {
-                    particle.radius += config.simple_input_data.max_radius / (TAU / dt);
+                if particle.radius < input_data.max_radius {
+                    particle.radius += input_data.max_radius / (TAU / dt);
                 }
                 let (target_y, left, right) = match particle.target {
                     ParticleTarget::Exit => {
-                        let left_exit_target = (config.simple_input_data.room_side
-                            - (config.simple_input_data.exit_size - 0.2))
-                            / 2.0;
-                        let right_exit_target = (config.simple_input_data.room_side
-                            + (config.simple_input_data.exit_size - 0.2))
-                            / 2.0;
+                        let left_exit_target =
+                            (input_data.room_side - (input_data.exit_size - 0.2)) / 2.0;
+                        let right_exit_target =
+                            (input_data.room_side + (input_data.exit_size - 0.2)) / 2.0;
                         (0.0, left_exit_target, right_exit_target)
                     }
                     ParticleTarget::FarExit => {
-                        let left_exit_target = (config.simple_input_data.room_side
-                            - config.simple_input_data.far_exit_size)
-                            / 2.0;
-                        let right_exit_target = (config.simple_input_data.room_side
-                            + config.simple_input_data.far_exit_size)
-                            / 2.0;
+                        let left_exit_target =
+                            (input_data.room_side - input_data.far_exit_size) / 2.0;
+                        let right_exit_target =
+                            (input_data.room_side + input_data.far_exit_size) / 2.0;
                         (
-                            -config.simple_input_data.far_exit_distance,
+                            -input_data.far_exit_distance,
                             left_exit_target,
                             right_exit_target,
                         )
@@ -179,10 +162,9 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
                         ParticleTarget::FarExit => particle_data.to_delete = true,
                     }
                 } else {
-                    particle_data.velocity = config.simple_input_data.max_speed
-                        * ((particle.radius - config.simple_input_data.min_radius)
-                            / (config.simple_input_data.max_radius
-                                - config.simple_input_data.min_radius))
+                    particle_data.velocity = input_data.max_speed
+                        * ((particle.radius - input_data.min_radius)
+                            / (input_data.max_radius - input_data.min_radius))
                             .pow(BETA)
                         * delta.normalize();
                 }
