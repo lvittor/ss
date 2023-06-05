@@ -28,19 +28,15 @@ struct Arguments {
     #[arg(short, long)]
     output_exit_times: PathBuf,
 
-    #[arg(short, long)]
-    steps_per_second: u16,
-
     #[arg(long)]
-    output_every: u64,
+    outputs_per_second: u16,
     #[arg(long)]
     output_last: bool,
 }
 
 struct InputData {
     simple_input_data: SimpleInputData,
-    steps_per_second: u16,
-    output_every: u64,
+    outputs_per_second: u16,
     output_last: bool,
 }
 
@@ -96,8 +92,9 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
     mut stop_condition: F,
 ) {
     let input_data = config.simple_input_data;
-    let dt = 1.0 / config.steps_per_second as f64;
-    let mut iteration = 0;
+    let output_dt = 1.0 / config.outputs_per_second as f64;
+    let mut next_output_time = 0.0;
+    let dt = input_data.min_radius / (2.0 * input_data.max_speed);
     let mut time = 0.0;
     let mut state: BTreeMap<_, _> = input_data
         .particles
@@ -111,14 +108,6 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
         StdRng::from_entropy()
     };
 
-    // Write to output
-    IterableFrame {
-        time,
-        particles: state.values(),
-    }
-    .write_to(&mut output_particles)
-    .unwrap();
-
     struct IterationParticleData {
         velocity: Vector2<f64>,
         in_contact: bool,
@@ -128,6 +117,17 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
     let mut iteration_particle_data: HashMap<ID, IterationParticleData> = HashMap::new();
 
     while !stop_condition(&state, time) {
+        if time >= next_output_time {
+            next_output_time += output_dt;
+            // Write to output
+            IterableFrame {
+                time,
+                particles: state.values(),
+            }
+            .write_to(&mut output_particles)
+            .unwrap();
+        }
+
         iteration_particle_data.clear();
         iteration_particle_data.extend(state.iter().map(|(&id, _)| {
             (
@@ -227,7 +227,6 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
 
         state.drain_filter(|id, _| iteration_particle_data[id].to_delete);
 
-        iteration += 1;
         time += dt;
 
         for _ in 0..reached_count {
@@ -235,20 +234,10 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
                 .write_fmt(format_args!("{}\n", time))
                 .unwrap();
         }
-
-        if iteration % config.output_every == 0 {
-            // Write to output
-            IterableFrame {
-                time,
-                particles: state.values(),
-            }
-            .write_to(&mut output_particles)
-            .unwrap();
-        }
     }
 
     // Write last frame in case it wasnt
-    if config.output_last && iteration % config.output_every != 0 {
+    if config.output_last {
         IterableFrame {
             time,
             particles: state.values(),
@@ -267,8 +256,7 @@ fn main() {
             .parse(&input)
             .into_result()
             .expect("Error parsing input data."),
-        steps_per_second: args.steps_per_second,
-        output_every: args.output_every,
+        outputs_per_second: args.outputs_per_second,
         output_last: args.output_last,
     };
 
