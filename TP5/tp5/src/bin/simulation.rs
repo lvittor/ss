@@ -47,6 +47,33 @@ struct InputData {
 const TAU: f64 = 0.5;
 const BETA: f64 = 1.0;
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+enum Wall {
+    Left,
+    Right,
+    Top,
+    Bottom,
+}
+
+fn did_particle_go_outside(particle: &Particle, config: &SimpleInputData) -> Vec<Wall> {
+    let mut collisions = Vec::with_capacity(2);
+    let radius = particle.radius;
+
+    if particle.position.x - radius < 0.0 {
+        collisions.push(Wall::Left)
+    } else if particle.position.x + radius > config.room_side {
+        collisions.push(Wall::Right)
+    }
+
+    if particle.position.y - radius < 0.0 {
+        collisions.push(Wall::Bottom)
+    } else if particle.position.y + radius > config.room_side {
+        collisions.push(Wall::Top)
+    }
+
+    collisions
+}
+
 fn find_target_direction<R: Rng>(
     position: Vector2<f64>,
     target_y: f64,
@@ -74,7 +101,8 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
     let mut time = 0.0;
     let mut state: BTreeMap<_, _> = input_data
         .particles
-        .into_iter()
+        .iter()
+        .cloned()
         .map(|p| (p.id, p))
         .collect();
     let mut rng = if let Some(seed) = input_data.rng_seed {
@@ -125,6 +153,25 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
             }
         }
 
+        let exit_left = (input_data.room_side - input_data.exit_size) / 2.0;
+        let exit_right = (input_data.room_side + input_data.exit_size) / 2.0;
+        for (id, particle) in &state {
+            for closest_point in [
+                Vector2::new(particle.position.x, input_data.room_side),
+                Vector2::new(input_data.room_side, particle.position.y),
+                Vector2::new(0.0, particle.position.y),
+                Vector2::new(particle.position.x.min(exit_left), 0.0),
+                Vector2::new(particle.position.x.max(exit_right), 0.0),
+            ] {
+                let delta = particle.position - closest_point;
+                if delta.magnitude_squared() < particle.radius.powi(2) {
+                    let pd = iteration_particle_data.get_mut(id).unwrap();
+                    pd.in_contact = true;
+                    pd.velocity += delta.normalize();
+                }
+            }
+        }
+
         let mut reached_count = 0;
 
         for (id, particle) in state.iter_mut() {
@@ -159,15 +206,13 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
                 let delta =
                     find_target_direction(particle.position, target_y, left, right, &mut rng);
 
-                // Target is close enough
-                if delta.magnitude_squared() < 0.01f64.powi(2) {
-                    match particle.target {
-                        ParticleTarget::Exit => {
-                            particle.target = ParticleTarget::FarExit;
-                            reached_count += 1;
-                        }
-                        ParticleTarget::FarExit => particle_data.to_delete = true,
-                    }
+                if particle.position.y < 0.0 && particle.target == ParticleTarget::Exit {
+                    particle.target = ParticleTarget::FarExit;
+                    reached_count += 1;
+                } else if particle.position.y < -input_data.far_exit_distance
+                    && particle.target == ParticleTarget::FarExit
+                {
+                    particle_data.to_delete = true;
                 } else {
                     particle_data.velocity = input_data.max_speed
                         * ((particle.radius - input_data.min_radius)

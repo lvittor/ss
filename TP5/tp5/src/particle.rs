@@ -3,7 +3,7 @@ use std::{fmt::Display, io::Write};
 use cim::particles::{CircularParticle, ID};
 use nalgebra::Vector2;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ParticleTarget {
     Exit,
     FarExit,
