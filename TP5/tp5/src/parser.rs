@@ -4,7 +4,7 @@ use crate::particle::{Frame, InputData, Particle, ParticleTarget};
 use chumsky::{prelude::*, text::newline};
 use cim::particles::ID;
 use itertools::Itertools;
-use nalgebra::{Rotation2, Vector2};
+use nalgebra::Vector2;
 
 pub fn input_parser<'a>() -> impl Parser<'a, &'a str, InputData, extra::Err<Rich<'a, char>>> {
     let digits = text::digits(10);

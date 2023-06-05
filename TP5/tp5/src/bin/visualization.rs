@@ -1,7 +1,6 @@
 use capturable_visualization::VisualizationBuilder;
 use chumsky::Parser;
 use clap::Parser as _parser;
-use nalgebra::{Rotation2, Vector2};
 use nannou::{
     color::rgb_u32,
     prelude::{Rgb, *},
