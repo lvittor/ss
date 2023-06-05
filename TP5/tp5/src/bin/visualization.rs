@@ -93,8 +93,27 @@ fn parse_hex_color(s: &str) -> Result<Rgb<u8>, ParseIntError> {
 }
 
 fn draw(_app: &App, model: &Model, draw: &Draw) {
-    let draw = draw.scale(1.0 / model.system_info.room_side as f32);
+    let draw = draw
+        .scale(1.0 / (model.system_info.room_side + model.system_info.far_exit_distance) as f32)
+        .y(model.system_info.far_exit_distance as f32)
+        .x((model.system_info.far_exit_distance / 2.0) as f32);
     draw.background().color(parse_hex_color("213437").unwrap());
+
+    let room_side = model.system_info.room_side as f32;
+    let half_room = room_side / 2.0;
+    let half_exit = (model.system_info.exit_size / 2.0) as f32;
+
+    let points = [
+        pt2(half_room - half_exit, 0.0),
+        pt2(0.0, 0.0),
+        pt2(0.0, room_side),
+        pt2(room_side, room_side),
+        pt2(room_side, 0.0),
+        pt2(half_room + half_exit, 0.0),
+    ];
+
+    draw.polyline().weight(0.1).points(points).color(WHITE);
+
     for (_i, particle) in model.frame.particles.iter().enumerate() {
         draw.ellipse()
             .radius(particle.radius as f32)
