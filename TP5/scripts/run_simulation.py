@@ -1,5 +1,8 @@
 from io import BytesIO, StringIO
 from math import pi
+from multiprocessing.pool import ThreadPool
+
+import tqdm
 from generate import generate
 from typing import Optional, TextIO
 import subprocess
@@ -13,10 +16,14 @@ def run_multiple_times():
     def decorator(func):
         def wrapper(input_generator, times: int):
             df = pd.DataFrame()
-            for i in range(times):
-                run = func(input_generator())
-                run['run'] = i
-                df = pd.concat([df, run], ignore_index=True)
+            with ThreadPool() as pool:
+                for i, run in enumerate(
+                    tqdm.tqdm(pool.imap_unordered(func, (input_generator()
+                                                         for _ in range(times))), total=times)
+                ):
+                    run = func(input_generator())
+                    run['run'] = i
+                    df = pd.concat([df, run], ignore_index=True)
             return df
         return wrapper
     return decorator
@@ -44,7 +51,7 @@ def run1():
         max_speed=2,
         min_radius=0.1,
         max_radius=0.32,
-    ), 10)
+    ), 1000)
 
     df.to_csv("data/simulation_a.csv", index=False)
     print(df)
@@ -60,7 +67,7 @@ def run2():
     })
 
     for N, d in zip([200, 260, 320, 380], [1.2, 1.8, 2.4, 3.0]):
-        print(f"N={N}, d={noise}")
+        print(f"N={N}, d={d}")
         data = run_simulation(lambda: generate(
             n=N,
             room_side=20,
@@ -70,7 +77,7 @@ def run2():
             max_speed=2,
             min_radius=0.1,
             max_radius=0.32,
-        ), 3)
+        ), 100)
         data['N'] = N
         data['d'] = d
         df = pd.concat([df, data], ignore_index=False)
@@ -80,5 +87,5 @@ def run2():
 
 
 if __name__ == "__main__":
-    run1()
-    # run2()
+    # run1()
+    run2()
