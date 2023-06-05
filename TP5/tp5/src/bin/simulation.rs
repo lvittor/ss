@@ -125,6 +125,8 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
             }
         }
 
+        let mut reached_count = 0;
+
         for (id, particle) in state.iter_mut() {
             let particle_data = iteration_particle_data.get_mut(id).unwrap();
             if particle_data.in_contact {
@@ -160,7 +162,10 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
                 // Target is close enough
                 if delta.magnitude_squared() < 0.01f64.powi(2) {
                     match particle.target {
-                        ParticleTarget::Exit => particle.target = ParticleTarget::FarExit,
+                        ParticleTarget::Exit => {
+                            particle.target = ParticleTarget::FarExit;
+                            reached_count += 1;
+                        }
                         ParticleTarget::FarExit => particle_data.to_delete = true,
                     }
                 } else {
@@ -179,6 +184,13 @@ fn run<W: Write, W2: Write, F: FnMut(&BTreeMap<ID, Particle>, f64) -> bool>(
 
         iteration += 1;
         time += dt;
+
+        for _ in 0..reached_count {
+            output_exit_times
+                .write_fmt(format_args!("{}\n", time))
+                .unwrap();
+        }
+
         if iteration % config.output_every == 0 {
             // Write to output
             IterableFrame {

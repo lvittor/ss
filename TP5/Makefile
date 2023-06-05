@@ -15,7 +15,7 @@ build:
 
 run-with-vis: build
 	make -C .. -f Makefile.rust -s run-raw BIN=simulation \
-		ARGS="--input $(INPUT_FILE_PATH) --output-exit-times=/dev/null --output-particles=/dev/stdout --steps-per-second=$(STEPS_PER_SECOND) --output-every $(EVERY) --output-last" | \
+		ARGS="--input $(INPUT_FILE_PATH) --output-exit-times=/dev/stderr --output-particles=/dev/stdout --steps-per-second=$(STEPS_PER_SECOND) --output-every $(EVERY) --output-last" | \
 	make -C .. -f Makefile.rust run-raw BIN=visualization \
 		ARGS="--input $(INPUT_FILE_PATH) --output /dev/stdin $(CAPTURE_DIR_ARG)"
 
