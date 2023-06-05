@@ -9,9 +9,9 @@ import numpy as np
 # Decorator for running the function run_cim multiple times and get the average
 
 
-def run_multiple_times(times: int):
+def run_multiple_times():
     def decorator(func):
-        def wrapper(input_generator):
+        def wrapper(input_generator, times: int):
             df = pd.DataFrame()
             for i in range(times):
                 run = func(input_generator())
@@ -22,7 +22,7 @@ def run_multiple_times(times: int):
     return decorator
 
 
-@run_multiple_times(times=3)
+@run_multiple_times()
 def run_simulation(input_data: str):
     simulation_process = subprocess.Popen(["make", "-s", "run-raw", "BIN=simulation", "USE_DOCKER=FALSE",
                                            f'RUN_ARGS=--input /dev/stdin --output-exit-times=/dev/stdout --output-particles=/dev/null --outputs-per-second=1'],
@@ -34,7 +34,23 @@ def run_simulation(input_data: str):
     return pd.DataFrame(enumerate(data), columns=['exit_n', 'time'])
 
 
-def run():
+def run1():
+    df = run_simulation(lambda: generate(
+        n=200,
+        room_side=20,
+        exit_size=1.2,
+        far_exit_distance=10,
+        far_exit_size=3,
+        max_speed=2,
+        min_radius=0.1,
+        max_radius=0.32,
+    ), 10)
+
+    df.to_csv("data/simulation_a.csv", index=False)
+    print(df)
+
+
+def run2():
     df = pd.DataFrame({
         'N': pd.Series(dtype=int),
         'd': pd.Series(dtype=float),
@@ -44,26 +60,25 @@ def run():
     })
 
     for N, d in zip([200, 260, 320, 380], [1.2, 1.8, 2.4, 3.0]):
-        for noise in [1]:
-            print(f"N={N}, d={noise}")
-            data = run_simulation(lambda: generate(
-                n=N,
-                room_side=20,
-                exit_size=d,
-                far_exit_distance=10,
-                far_exit_size=3,
-                max_speed=2,
-                min_radius=0.1,
-                max_radius=0.32,
-            ))
-            data['N'] = N
-            data['d'] = d
-            df = pd.concat([df, data], ignore_index=False)
+        print(f"N={N}, d={noise}")
+        data = run_simulation(lambda: generate(
+            n=N,
+            room_side=20,
+            exit_size=d,
+            far_exit_distance=10,
+            far_exit_size=3,
+            max_speed=2,
+            min_radius=0.1,
+            max_radius=0.32,
+        ), 3)
+        data['N'] = N
+        data['d'] = d
+        df = pd.concat([df, data], ignore_index=False)
 
     df.to_csv("data/simulation_b.csv", index=False)
     print(df)
 
 
 if __name__ == "__main__":
-    # print(run_simulation(generate(300, 7.0, 0.5, 0.2, 0.03)))
-    run()
+    run1()
+    # run2()
